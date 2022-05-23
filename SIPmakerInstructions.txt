@@ -1,0 +1,17 @@
+﻿
+                                                                      ******************
+                                                                      *  INSTRUCTIONS *
+                                                                      ******************
+
+Welcome to the SIPmaker Digital Object Formatter. 
+
+=======================
+FOR MORE INFORMATION:
+=======================
+For more instructions, see the DnD collaboration wiki:
+
+ https://https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
+
+For questions about the tool and support, contact:
+
+    L. I. Menzies, lmenzies (at) uab (dot) edu
