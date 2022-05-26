@@ -160,7 +160,7 @@ class ObjFormatter:
         browse1.configure(bg=smoke, fg='black', highlightbackground=uabgreen, font=('Arial', entryfont))
         browse1.grid(column=2, row=0, pady=5, padx=5, sticky='w')
         self.e1 = Entry(frame1, width=50, textvariable=itemfolder)
-        self.e1.configure(bg=gray, relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
+        self.e1.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
         self.e1.grid(column=1, row=0, pady=5, padx=0, sticky='w')
         # Entry for the master CSV metadata file
         csvfile = StringVar(frame1)
@@ -172,7 +172,7 @@ class ObjFormatter:
                           relief='raised')
         browse2.grid(column=2, row=1, pady=5, padx=5, sticky='w')
         self.e2 = Entry(frame1, width=50, textvariable=csvfile)
-        self.e2.configure(bg=gray, relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
+        self.e2.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
         self.e2.grid(column=1, row=1, pady=5, padx=0, sticky='w')
         # Drop-Down of the column headings in the master CSV file
         labl3 = Label(frame1, text='CSV ID\nColumn:')
@@ -183,10 +183,10 @@ class ObjFormatter:
         self.options.trace('r', self.get_headers)
         firstone = ["Select CSV", "Then \'Refresh\'"]
         self.hdmenu = OptionMenu(frame1, self.variable, *firstone)
-        self.hdmenu.configure(width=20, bg=uabgreen, font=('Arial', basefont + 2))
+        self.hdmenu.configure(width=20, fg='black', bg=uabgreen, font=('Arial', basefont + 2))
         self.hdmenu.grid(column=1, row=2, pady=5, padx=0, sticky='e')
         self.e3 = Entry(frame1, width=24, textvariable=self.variable)
-        self.e3.configure(bg=gray, relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
+        self.e3.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
         self.e3.grid(column=1, row=2, pady=5, padx=0, sticky='w')
         refresh1 = Button(frame1, text='Refresh', command=lambda: self.get_headers(csvfile))
         refresh1.configure(bg=smoke, fg='black', highlightbackground=uabgreen, font=('Arial', entryfont))
@@ -629,7 +629,7 @@ class ObjFormatter:
         if trans == 1:
             self.trans_manifest(itemsdir)
         messagebox.showinfo(message='Done!')
-        return
+        root.quit()
 
 def instructions(fontsize):
     new = Toplevel()
