@@ -38,7 +38,7 @@ class GetValues:
         labl001.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl001.grid(column=0, row=2, pady=5, padx=5, sticky=E)
         self.en001 = Entry(frame001, width=45, textvariable=fol)
-        self.en001.configure(bg=gray, relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
+        self.en001.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en001.grid(column=1, row=2, pady=5, padx=0, sticky=W)
         browse1 = Button(frame001, text='Browse', command=lambda: self.ask_folder(fol))
         browse1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
@@ -49,7 +49,7 @@ class GetValues:
         labl002.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl002.grid(column=0, row=3, pady=5, padx=5, sticky=E)
         self.en002 = Entry(frame001, width=45, textvariable=owner)
-        self.en002.configure(bg=gray, relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
+        self.en002.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en002.grid(column=1, row=3, pady=5, padx=0, sticky=W)
         #
         collname = StringVar(frame001)
@@ -57,7 +57,7 @@ class GetValues:
         labl003.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl003.grid(column=0, row=4, pady=5, padx=5, sticky=E)
         self.en003 = Entry(frame001, width=45, textvariable=collname)
-        self.en003.configure(bg=gray, relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
+        self.en003.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en003.grid(column=1, row=4, pady=5, padx=0, sticky=W)
         #
         blazerid = StringVar(frame001)
@@ -65,7 +65,7 @@ class GetValues:
         labl004.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl004.grid(column=0, row=5, pady=5, padx=5, sticky=E)
         self.en004 = Entry(frame001, width=45, textvariable=blazerid)
-        self.en004.configure(bg=gray, relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
+        self.en004.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en004.grid(column=1, row=5, pady=5, padx=0, sticky=W)
         #
         frame001.configure(bg=uabgreen, highlightbackground='black', bd=5, relief=RAISED)
@@ -141,9 +141,22 @@ class GetValues:
                 itemfolder = path.join(objects, itemname)
                 if not itemname in obj_list:
                     obj_list.append(itemname)
-                    mkdir(itemfolder)
-                    mkdir(path.join(itemfolder, 'a'))
-                    mkdir(path.join(itemfolder, 'b'))
+                    try:
+                        mkdir(itemfolder)
+                    except FileExistsError:
+                        yesno = messagebox.askyesno(message=f'The folder {itemfolder} already exists!\nOverwrite?')
+                        if yesno == True:
+                            rmtree(itemfolder)
+                            mkdir(itemfolder)
+                            mkdir(path.join(itemfolder, 'a'))
+                            mkdir(path.join(itemfolder, 'b'))
+                        else:
+                            quitting = messagebox.askyesno(message=f'Do you want to quit?')
+                            if quitting == True:
+                                root.quit()
+                    else:
+                        mkdir(path.join(itemfolder, 'a'))
+                        mkdir(path.join(itemfolder, 'b'))
                 if files[-5] == 'a':
                     newfilepath = path.join(itemfolder, 'a', files)
                     try:
@@ -161,7 +174,7 @@ class GetValues:
                     if path.exists(newfilepath):
                         remove(oldfilepath)
                 else:
-                    messagebox.showwarning(message=f'The filename {files} does not \nend in \'a.tif\' or \'b.tif\'.\nSkipping it...')
+                    messagebox.showwarning(message=f'The filename {files} does not \nend in \'a\' or \'b\'.\nSkipping it...')
         return True
 
     def make_csv(self):
@@ -191,8 +204,7 @@ class GetValues:
         writer.writerow(colnames)
         flist = listdir(obj_dir)
         sorted_flist = sorted(flist)
-        numfiles = len(sorted_flist)
-        numrows = 0
+        numfolders = 0
         for dirs in sorted_flist:
             fpath = path.join(obj_dir, dirs)
             if path.isdir(fpath):
@@ -203,25 +215,28 @@ class GetValues:
                 newrow[3] = collection
                 newrow[4] = ''
                 newrow[5] = username
-                numrows += 1
+                numfolders += 1
                 writer.writerow(newrow)
         newCSV.close()
-        messagebox.showinfo(message=f'Created CSV loader file\n with {numrows} rows for {numfiles} files.')
+        messagebox.showinfo(message=f'Created CSV loader file\n with rows for {numfolders} items.')
         return True
 
     def run_procs(self):
-        finished = False
+        successful = False
         collate_yesno = self.collatevar.get()
         csv_yesno = self.csvvar.get()
         if collate_yesno == 1:
-            finished = self.collate_files()
+            successful = self.collate_files()
+            if successful == False:
+                messagebox.showwarning(mesage=f'Something went wrong during\ncollation. Quitting.')
+                root.quit()
         if csv_yesno == 1:
-            finished = self.make_csv()
-        if finished == True:
-            messagebox.showinfo(message=f'Done!')
+            successful = self.make_csv()
+        if successful == False:
+            messagebox.showwarning(message=f'Something went wrong during\nCSV Generation. Quitting')
             root.quit()
         else:
-            messagebox.showwarning(message=f'Something went wrong.')
+            messagebox.showinfo(message=f'Done!')
             root.quit()
 
 root = tk.Tk()
