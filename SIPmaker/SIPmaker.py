@@ -11,7 +11,7 @@ University of Alabama at Birmingham
 Birmingham, AL 35294
 
 Initial script created 2022-03-30 by L. I. Menzies
-This Version Last Updated 2022-05-17 by L. I. Menzies
+This Version Last Updated 2022-09-28 by L. I. Menzies
 ====================================================================
 For more information, see the UABL DnD collaboration wiki:
 https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
@@ -150,8 +150,8 @@ class ObjFormatter:
         self.logoimglabel.grid(column=0, row=0, pady=7, padx=imgpad, sticky='nsew')
         frame0.configure(bg='white', bd=5, relief='sunken')
         frame0.grid(column=0, row=0, pady=0, padx=0, sticky='nsew')
-        # Entry for the Folder that contains the items
         frame1 = Frame(root)
+        # Entry for the Folder that contains the items
         itemfolder = StringVar(frame1)
         labl1 = Label(frame1, text='Folder of\nItems:')
         labl1.configure(fg='black', bg=blazegold, bd=0, font=('Arial', basefont), height=2, width=9, justify='center')
@@ -162,35 +162,46 @@ class ObjFormatter:
         self.e1 = Entry(frame1, width=50, textvariable=itemfolder)
         self.e1.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
         self.e1.grid(column=1, row=0, pady=5, padx=0, sticky='w')
-        # Entry for the master CSV metadata file
-        csvfile = StringVar(frame1)
-        labl2 = Label(frame1, text='CSV File:')
+        # Entry for the "processing" folder, which includes "ready_to_transfer" etc. subfolders
+        processfolder = StringVar(frame1)
+        labl2 = Label(frame1, text='Processing\nFolder:')
         labl2.configure(fg='black', bg=blazegold, bd=0, font=('Arial', basefont), height=2, width=9, justify='center')
         labl2.grid(column=0, row=1, pady=5, padx=5, sticky='e')
-        browse2 = Button(frame1, text='Browse', command=lambda: self.ask_file(csvfile))
-        browse2.configure(bg=smoke, fg='black', highlightbackground=uabgreen, font=('Arial', entryfont),
-                          relief='raised')
+        browse2 = Button(frame1, text='Browse', command=lambda: self.ask_folder(processfolder))
+        browse2.configure(bg=smoke, fg='black', highlightbackground=uabgreen, font=('Arial', entryfont))
         browse2.grid(column=2, row=1, pady=5, padx=5, sticky='w')
-        self.e2 = Entry(frame1, width=50, textvariable=csvfile)
+        self.e2 = Entry(frame1, width=50, textvariable=processfolder)
         self.e2.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
         self.e2.grid(column=1, row=1, pady=5, padx=0, sticky='w')
-        # Drop-Down of the column headings in the master CSV file
-        labl3 = Label(frame1, text='CSV ID\nColumn:')
+        # Entry for the master CSV metadata file
+        csvfile = StringVar(frame1)
+        labl3 = Label(frame1, text='CSV File:')
         labl3.configure(fg='black', bg=blazegold, bd=0, font=('Arial', basefont), height=2, width=9, justify='center')
         labl3.grid(column=0, row=2, pady=5, padx=5, sticky='e')
+        browse3 = Button(frame1, text='Browse', command=lambda: self.ask_file(csvfile))
+        browse3.configure(bg=smoke, fg='black', highlightbackground=uabgreen, font=('Arial', entryfont),
+                          relief='raised')
+        browse3.grid(column=2, row=2, pady=5, padx=5, sticky='w')
+        self.e3 = Entry(frame1, width=50, textvariable=csvfile)
+        self.e3.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
+        self.e3.grid(column=1, row=2, pady=5, padx=0, sticky='w')
+        # Drop-Down of the column headings in the master CSV file
+        labl4 = Label(frame1, text='CSV ID\nColumn:')
+        labl4.configure(fg='black', bg=blazegold, bd=0, font=('Arial', basefont), height=2, width=9, justify='center')
+        labl4.grid(column=0, row=3, pady=5, padx=5, sticky='e')
         self.variable = StringVar(frame1)
         self.options = StringVar(frame1)
         self.options.trace('r', self.get_headers)
         firstone = ["Select CSV", "Then \'Refresh\'"]
         self.hdmenu = OptionMenu(frame1, self.variable, *firstone)
         self.hdmenu.configure(width=20, fg='black', bg=uabgreen, font=('Arial', basefont + 2))
-        self.hdmenu.grid(column=1, row=2, pady=5, padx=0, sticky='e')
-        self.e3 = Entry(frame1, width=24, textvariable=self.variable)
-        self.e3.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
-        self.e3.grid(column=1, row=2, pady=5, padx=0, sticky='w')
+        self.hdmenu.grid(column=1, row=3, pady=5, padx=0, sticky='e')
+        self.e4 = Entry(frame1, width=24, textvariable=self.variable)
+        self.e4.configure(bg=gray, fg='black', relief='sunken', bd=2, font=('Arial', entryfont + 2), justify='left')
+        self.e4.grid(column=1, row=3, pady=5, padx=0, sticky='w')
         refresh1 = Button(frame1, text='Refresh', command=lambda: self.get_headers(csvfile))
         refresh1.configure(bg=smoke, fg='black', highlightbackground=uabgreen, font=('Arial', entryfont))
-        refresh1.grid(column=2, row=2, pady=5, padx=5, sticky='w')
+        refresh1.grid(column=2, row=3, pady=5, padx=5, sticky='w')
         frame1.configure(bg=uabgreen, bd=5, relief='raised')
         frame1.grid(column=0, row=1, pady=0, padx=0, sticky='nsew')
         # Checkbuttons
@@ -222,12 +233,12 @@ class ObjFormatter:
         return userHome
 
     def ask_folder(self, foname):
-        startfolder1 = path.join(self.user_home(), 'Documents')
+        startfolder1 = self.user_home()
         foname.set(path.abspath(askdirectory(initialdir=startfolder1, title='Select the Folder')))
         return foname
 
     def ask_file(self, fname):
-        startfolder2 = path.join(self.user_home(), 'Documents')
+        startfolder2 = self.user_home()
         fname.set(path.abspath(askopenfilename(initialdir=startfolder2, title='Select the master CSV File')))
         return fname
 
@@ -259,7 +270,7 @@ class ObjFormatter:
 
     def get_headers(self, *args):
         """ Retrieves the options for the drop-down menu of CSV headers """
-        csvfi = self.e2.get()
+        csvfi = self.e3.get()
         csvpath = path.join(str(csvfi))
         if path.exists(csvpath) and path.splitext(csvpath)[1] == '.csv':
             with open(csvfi, 'r', encoding='utf-8') as cfile:
@@ -336,13 +347,11 @@ class ObjFormatter:
             if self.prompting == 0:
                 runnext2 = True
             else:
-                runnext2 = messagebox.askyesno(
-                    message="Created %d \'metadata.csv\' and %d \'metadata.xml\' files.\n\nProceed with the next action?" % (
-                        counts[0], counts[1]))
+                runnext2 = messagebox.askyesno(message=f'Created {counts[0]} \'metadata.csv\' and {counts[1]} \'metadata.xml\' files.\n\nProceed with the next action?')
         else:
             runnext2 = False
             messagebox.showwarning(
-                message="Created %d \'metadata.csv\' and %d \'metadata.xml\' files." % (counts[0], counts[1]))
+                message=f'Created {counts[0]} \'metadata.csv\' and {counts[1]} \'metadata.xml\' files.')
         return runnext2
 
     def md5(self, finame):
@@ -409,9 +418,11 @@ class ObjFormatter:
                     for name in files:
                         filepathname = path.join(base, name)
                         # Deletes .DS_Store Files
-                        if path.basename(filepathname) == '.DS_Store':
+                        if name == '.DS_Store':
                             remove(filepathname)
-                        elif not path.basename(filepathname) == '.DS_Store':
+                        # elif not path.basename(filepathname) == '.DS_Store':
+                        # Ignores files that begin with '.'
+                        elif not name == '.DS_Store' and not name.startswith('.'):
                             counter += 1
                             rownum = str(counter)
                             statinfo = stat(filepathname)
@@ -434,7 +445,7 @@ class ObjFormatter:
                             filegroup = str(statinfo.st_gid)
                             # Displays a shortened Path for each file, excluding the directories
                             # that precede the working directory that contains the objects.
-                            showpath = path.relpath(filepathname, objectsdir)
+                            showpath = path.relpath(filepathname, objpath)
                             newrow = [name, showpath, csize, filemime, filectime, modifdate, accessdate,
                                         md5sum, sha3sum, runtime, filemode, fileino, filedevice,
                                         filenlink, fileuser, filegroup]
@@ -494,12 +505,12 @@ class ObjFormatter:
             messagebox.showwarning(message="Created %d total bags,\nof which %d are valid." % (totalbags, validbags))
         return runnext4
 
-    def run_tar(self, tarfolder, moreopts5):
+    def run_tar(self, tarfolder, procfolder, moreopts5):
         """ Tars all objects in a single directory """
         tarfiles = 0
         alreadytar = 0
         notfolder = 0
-        outfolder = path.join(self.user_home(), 'Documents', 'ready_to_transfer')
+        outfolder = path.join(procfolder, 'ready_to_transfer')
         if not path.exists(outfolder):
             mkdir(outfolder)
         for i in listdir(tarfolder):
@@ -532,20 +543,24 @@ class ObjFormatter:
             messagebox.showwarning(message=f'Created {tarfiles} tar archives.')
         return runnext5
 
-    def trans_manifest(self, indirectory):
+    def trans_manifest(self, indirectory, procdirectory):
         """
         Generates a manifest of filenames and checksums for a directory of
         Bagged and Tarred objects
         """
-        askingdir = path.join(self.user_home(), 'Documents', 'ready_to_transfer')
+        if path.isdir(procdirectory):
+            process_dir = procdirectory
+        else:
+            process_dir = askdirectory(initialdir=self.user_home())
+        askingdir = path.join(process_dir, 'ready_to_transfer')
         indir = ""
         tardest = messagebox.askyesno(message=f'Create manifest of {askingdir}?', default='yes')
         if tardest:
             indir = askingdir
         elif not tardest:
-            indir = askdirectory(initialdir=path.join(self.user_home(), 'Documents'),
+            indir = askdirectory(initialdir=process_dir,
                                  title="In which folder are the objects to be transferred?")
-        outdir = path.join(self.user_home(), 'Documents', 'transfer_manifests')
+        outdir = path.join(process_dir, 'transfer_manifests')
         if not path.exists(outdir):
             mkdir(outdir)
         tar_list = open(path.join(outdir, f'transfer_{time.strftime("%Y%b%d_%H%M%S")}.csv'),
@@ -563,6 +578,7 @@ class ObjFormatter:
     def run_procs(self, root, frame2):
         runnext = True
         itemsdir = self.e1.get()
+        procdir = self.e2.get()
         pre = frame2.prebagvar.get()
         meta = frame2.metavar.get()
         inv = frame2.invenvar.get()
@@ -593,8 +609,8 @@ class ObjFormatter:
         # Run CSV meta
         if meta == 1:
             nselect -= 1
-            metainput = self.e2.get()
-            idcolumn = self.e3.get()
+            metainput = self.e3.get()
+            idcolumn = self.e4.get()
             if metainput == "":
                 messagebox.showwarning(message="You must choose a CSV master metadata file.")
                 return
@@ -622,12 +638,12 @@ class ObjFormatter:
         # Run Tar
         if tar == 1:
             nselect -= 1
-            runnext = self.run_tar(itemsdir, nselect)
+            runnext = self.run_tar(itemsdir, procdir, nselect)
             if runnext == False:
                 return
         # Make Transfer Manifest
         if trans == 1:
-            self.trans_manifest(itemsdir)
+            self.trans_manifest(itemsdir, procdir)
         messagebox.showinfo(message='Done!')
         root.quit()
 
@@ -668,7 +684,7 @@ def instructions(fontsize):
 def main():
     root = tk.Tk()
     w = 705
-    h = 471
+    h = 515
     ws = root.winfo_screenwidth()
     hs = root.winfo_screenheight()
     x = (ws / 2) - (w / 2)

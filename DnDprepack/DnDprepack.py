@@ -5,14 +5,14 @@ level Item folders. Generates a CSV that can be edited. Output of this
 script can be fed into SIPmaker.
 
 Created by L. I. Menzies 2022-04-13
-Last modified by L. I. Menzies 2022-04-13
+Last modified by L. I. Menzies 2022-09-27
 """
 
 import csv, time
 import tkinter as tk
 from os import getcwd, getenv, listdir, mkdir, path, remove
 from platform import system
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, askdirectory
@@ -44,29 +44,40 @@ class GetValues:
         browse1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse1.grid(column=2, row=2, pady=5, padx=5, sticky=W)
         #
-        owner = StringVar(frame001)
-        labl002 = Label(frame001, text='Owned By:')
+        procfol = StringVar(frame001)
+        labl002 = Label(frame001, text='\"Processing\"\nFolder:')
         labl002.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl002.grid(column=0, row=3, pady=5, padx=5, sticky=E)
-        self.en002 = Entry(frame001, width=45, textvariable=owner)
+        self.en002 = Entry(frame001, width=45, textvariable=procfol)
         self.en002.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en002.grid(column=1, row=3, pady=5, padx=0, sticky=W)
+        browse2 = Button(frame001, text='Browse', command=lambda: self.ask_folder(procfol))
+        browse2.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
+        browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
         #
-        collname = StringVar(frame001)
-        labl003 = Label(frame001, text='Collection\nName:')
+        owner = StringVar(frame001)
+        labl003 = Label(frame001, text='Owned By:')
         labl003.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl003.grid(column=0, row=4, pady=5, padx=5, sticky=E)
-        self.en003 = Entry(frame001, width=45, textvariable=collname)
+        self.en003 = Entry(frame001, width=45, textvariable=owner)
         self.en003.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en003.grid(column=1, row=4, pady=5, padx=0, sticky=W)
         #
-        blazerid = StringVar(frame001)
-        labl004 = Label(frame001, text='Your\nBlazerID:')
+        collname = StringVar(frame001)
+        labl004 = Label(frame001, text='Collection\nName:')
         labl004.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl004.grid(column=0, row=5, pady=5, padx=5, sticky=E)
-        self.en004 = Entry(frame001, width=45, textvariable=blazerid)
+        self.en004 = Entry(frame001, width=45, textvariable=collname)
         self.en004.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en004.grid(column=1, row=5, pady=5, padx=0, sticky=W)
+        #
+        blazerid = StringVar(frame001)
+        labl005 = Label(frame001, text='Your\nBlazerID:')
+        labl005.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl005.grid(column=0, row=6, pady=5, padx=5, sticky=E)
+        self.en005 = Entry(frame001, width=45, textvariable=blazerid)
+        self.en005.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
+        self.en005.grid(column=1, row=6, pady=5, padx=0, sticky=W)
         #
         frame001.configure(bg=uabgreen, highlightbackground='black', bd=5, relief=RAISED)
         frame001.grid(column=0, row=0, pady=0, padx=0, sticky=NSEW)
@@ -107,26 +118,28 @@ class GetValues:
         return userHome
 
     def ask_folder(self, foname):
-        foname.set(askdirectory(initialdir=path.join(self.user_home(), 'Pictures'), title='Select the Folder'))
+        foname.set(askdirectory(initialdir=self.user_home(), title='Select the Folder'))
         return foname
 
     def ask_file(self, fname):
-        fname.set(path.abspath(askopenfilename(initialdir=path.join(self.user_home(), 'Pictures'), title='Select the master CSV File')))
+        fname.set(path.abspath(askopenfilename(initialdir=self.user_home(), title='Select the master CSV File')))
         return fname
 
     def get_entries(self):
-        entries = ['unknown', 'unknown', 'unknown', 'unknown']
+        entries = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown']
         entries[0] = self.en001.get() # Path to the 'Output' folder
-        entries[1] = self.en002.get() # Owned By
-        entries[2] = self.en003.get() # Collection name
-        entries[3] = self.en004.get() # Packaged By
+        entries[1] = self.en002.get() # Path to the 'Processing' folder
+        entries[2] = self.en003.get() # Owned By
+        entries[3] = self.en004.get() # Collection name
+        entries[4] = self.en005.get() # Packaged By
         return entries
 
     def collate_files(self):
         info = self.get_entries()
         in_dir = info[0]
+        p_dir = info[1]
         obj_list = []
-        objects = path.join(self.user_home(), 'Documents', 'ready_to_package')
+        objects = path.join(p_dir, 'ready_to_package')
         if not path.isdir(objects):
             try:
                 mkdir(objects)
@@ -135,7 +148,8 @@ class GetValues:
                 root.quit()
         for files in listdir(in_dir):
             accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jp2']
-            if path.splitext(files)[1] in accepted_files:
+            # script only accepts file formats of the proper type that do not begin with '.'
+            if path.splitext(files)[1] in accepted_files and not files.startswith('.'):
                 oldfilepath = path.join(in_dir, files)
                 itemname = files[0:-10]
                 itemfolder = path.join(objects, itemname)
@@ -179,14 +193,15 @@ class GetValues:
 
     def make_csv(self):
         csv_info = self.get_entries()
-        ownBy = csv_info[1]
-        collection = csv_info[2]
-        username = csv_info[3]
-        obj_dir = path.join(self.user_home(), 'Documents', 'ready_to_package')
+        proc_dir = csv_info[1]
+        ownBy = csv_info[2]
+        collection = csv_info[3]
+        username = csv_info[4]
+        obj_dir = path.join(proc_dir, 'ready_to_package')
         if not path.isdir(obj_dir):
             messagebox.showwarning(message=f'Could not find the folder of items.\nQuitting.')
             root.quit()
-        out_dir = path.join(self.user_home(), 'Documents', 'csv_loaders')
+        out_dir = path.join(proc_dir, 'csv_loaders')
         if not path.isdir(out_dir):
             try:
                 mkdir(out_dir)
@@ -241,7 +256,7 @@ class GetValues:
 
 root = tk.Tk()
 w = 646
-h = 401
+h = 452
 ws = root.winfo_screenwidth()
 hs = root.winfo_screenheight()
 x = (ws/2) - (w/2)
