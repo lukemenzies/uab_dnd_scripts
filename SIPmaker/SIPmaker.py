@@ -11,7 +11,7 @@ University of Alabama at Birmingham
 Birmingham, AL 35294
 
 Initial script created 2022-03-30 by L. I. Menzies
-This Version Last Updated 2022-09-28 by L. I. Menzies
+This Version Last Updated 2023-03-30 by L. I. Menzies
 ====================================================================
 For more information, see the UABL DnD collaboration wiki:
 https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
@@ -354,13 +354,22 @@ class ObjFormatter:
                 message=f'Created {counts[0]} \'metadata.csv\' and {counts[1]} \'metadata.xml\' files.')
         return runnext2
 
-    def md5(self, finame):
-        """ Data Services requested Md5 hashes but Md5 is deprecated """
+    def md5hash(self, finame):
+        """ Generates MD5 hashes """
         hash_md5 = hashlib.md5()
         with open(finame, "rb") as md5file:
             for chunk in iter(lambda: md5file.read(4096), b""):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
+
+    def sha256hash(self, filnam):
+        """ Generates SHA256 hashes """
+        chunksize = io.DEFAULT_BUFFER_SIZE
+        hash_sha256 = hashlib.sha256()
+        with open(filnam, "rb") as sha256file:
+            for chunk in iter(lambda: sha256file.read(chunksize), b""):
+                hash_sha256.update(chunk)
+        return hash_sha256.hexdigest()
 
     def sha3hash(self, filname):
         """ Generates SHA3-256 hashes """
@@ -411,7 +420,7 @@ class ObjFormatter:
                 tempmani = open(temp_path, 'w', encoding='utf-8')
                 temp_writer = csv.writer(tempmani)
                 headrow = ['Filename', 'Relative Path', 'Filesize', 'Filetype', 'C-Time', 'Modified', 'Accessed',
-                            'MD5_Sum', 'SHA3_256', 'ChecksumDateTime', 'mode', 'inode',
+                            'MD5', 'SHA256', 'ChecksumDateTime', 'mode', 'inode',
                             'device', 'enlink', 'user', 'group']
                 temp_writer.writerow(headrow)
                 for base, dirs, files in walk(walkpath):
@@ -434,8 +443,8 @@ class ObjFormatter:
                             # "change time", i.e. the last time the metadata was changed.
                             modifdate = time.strftime("%Y.%m.%d %H:%M:%S", time.localtime(statinfo.st_mtime))
                             accessdate = time.strftime("%Y.%m.%d %H:%M:%S", time.localtime(statinfo.st_atime))
-                            md5sum = self.md5(filepathname)
-                            sha3sum = self.sha3hash(filepathname)
+                            md5sum = self.md5hash(filepathname)
+                            sha256sum = self.sha256hash(filepathname)
                             runtime = time.strftime("%Y.%m.%d %H:%M:%S")
                             filemode = str(statinfo.st_mode)
                             fileino = str(statinfo.st_ino)
@@ -447,7 +456,7 @@ class ObjFormatter:
                             # that precede the working directory that contains the objects.
                             showpath = path.relpath(filepathname, objpath)
                             newrow = [name, showpath, csize, filemime, filectime, modifdate, accessdate,
-                                        md5sum, sha3sum, runtime, filemode, fileino, filedevice,
+                                        md5sum, sha256sum, runtime, filemode, fileino, filedevice,
                                         filenlink, fileuser, filegroup]
                             temp_writer.writerow(newrow)
                 tempmani.close()
@@ -485,7 +494,7 @@ class ObjFormatter:
                 if path.exists(path.join(inpath, 'data')):
                     cont = messagebox.askyesno(message="It appears that \'%s\' is already a bag.\nBag it anyway?" % f)
                 if cont == True:
-                    newbag = bagit.make_bag(inpath, checksums=['md5', 'sha512'])
+                    newbag = bagit.make_bag(inpath, checksums=['md5', 'sha256'])
                     totalbags += 1
                     if newbag.is_valid():
                         validbags += 1
@@ -568,8 +577,10 @@ class ObjFormatter:
         sorted_tarlist = sorted([t for t in listdir(indir) if '.tar' in t])
         for tars in sorted_tarlist:
             tar_path = path.join(indir, tars)
-            sha3sum = self.sha3hash(tar_path)
-            tar_list.write(f'{tars},{sha3sum}\n')
+            md5sum = self.md5hash(tar_path)
+            sha256sum = self.sha256hash(tar_path)
+            # sha3sum = self.sha3hash(tar_path)
+            tar_list.write(f'{tars},{md5sum},{sha256sum}\n')
         tar_list.close()
         if self.prompting == 1:
             messagebox.showinfo(message=f'Transfer Manifest Created\nfor {len(sorted_tarlist)} Tar Files')
