@@ -31,9 +31,11 @@ def untar_targz(tarsdir, tarslist):
             # move tar contents up a level
             for c in listdir(ex_dir):
                 itempath = path.join(ex_dir, c)
-                newpath = path.dirname(ex_dir)
-                move(itempath, newpath)
+                temppath = path.join(tarsdir, c + 't')
+                newpath = path.join(tarsdir, c)
+                move(itempath, temppath)
                 rmtree(ex_dir)
+                rename(temppath, newpath)
             print(f'Extracted {tar} to {tarsdir}\n')
             remove(tarpath)
     print(f'Extracted contents of {counting} tar files with {errs} extraction errors.\n')
