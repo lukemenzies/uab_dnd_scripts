@@ -2,6 +2,7 @@
 # Script to un-tar, unzip, and un-bag a folder of Bags
 # Un-tar runs equivalent of tar -xzvf
 # Simply deletes all Bag-specific files and moves the payload up one folder
+# Last updated 2023-04-05 by L. I. Menzies
 
 import tarfile
 from os import listdir, mkdir, path, remove, rename
@@ -37,7 +38,7 @@ def untar_targz(tarsdir, tarslist):
                 rmtree(ex_dir)
                 rename(temppath, newpath)
             print(f'Extracted {tar} to {tarsdir}\n')
-            remove(tarpath)
+            # remove(tarpath)
     print(f'Extracted contents of {counting} tar files with {errs} extraction errors.\n')
     return extractok
 

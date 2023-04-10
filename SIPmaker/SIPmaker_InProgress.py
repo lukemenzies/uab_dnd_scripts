@@ -487,6 +487,19 @@ class ObjFormatter:
         """ Bags all objects in a single directory, according to APTrust BagIt profile """
         validbags = 0
         totalbags = 0
+        # Defining MData tags
+        metadata = {
+            'checksums': ['md5', 'sha256'],
+            'Bag-Count': '',
+            'Bag-Group-Identifier': '',
+            'BagIt-Profile-Identifier': 'https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json'
+            'Bagging-Date': datetime.now().isoformat(),
+            'Bagging-Software': 'bagit-python',
+            'Internal-Sender-Description': '',
+            'Internal-Sender-Identifier': '',
+            'Payload-Oxum': '',
+            'Source-Organization': 'University of Alabama at Birmingham'
+            }
         for f in listdir(bagsdir):
             inpath = path.join(bagsdir, f)
             cont = True
@@ -500,6 +513,11 @@ class ObjFormatter:
                         validbags += 1
                     elif not newbag.is_valid():
                         messagebox.showwarning(message="Bag \'%s\' is not a valid bag." % f)
+                    # Section to create the necessary APTrust Info file
+                    apt_info_path = path.join(inpath, 'aptrust-info.txt')
+                    with open(apt_info_path, 'w') as apt_info:
+                        apt_info.write(f'Access: Institution\nDescription: University of Alabama at Birmingham\n
+                                        Storage-Option: Standard\nTitle: {f.split('.')[0]}')
                 # elif cont == False:
                 #     messagebox.showwarning(message="Skipped bagging of \'%s\'." %f)
         if not moreopts4 == 0:
