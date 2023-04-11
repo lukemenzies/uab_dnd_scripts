@@ -488,16 +488,12 @@ class ObjFormatter:
         validbags = 0
         totalbags = 0
         # Defining MData tags
-        metadata = {
-            'checksums': ['md5', 'sha256'],
+        APT_bag_info = {
             'Bag-Count': '',
             'Bag-Group-Identifier': '',
-            'BagIt-Profile-Identifier': 'https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json'
-            'Bagging-Date': datetime.now().isoformat(),
-            'Bagging-Software': 'bagit-python',
+            'BagIt-Profile-Identifier': 'https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json',
             'Internal-Sender-Description': '',
             'Internal-Sender-Identifier': '',
-            'Payload-Oxum': '',
             'Source-Organization': 'University of Alabama at Birmingham'
             }
         for f in listdir(bagsdir):
@@ -507,17 +503,16 @@ class ObjFormatter:
                 if path.exists(path.join(inpath, 'data')):
                     cont = messagebox.askyesno(message="It appears that \'%s\' is already a bag.\nBag it anyway?" % f)
                 if cont == True:
-                    newbag = bagit.make_bag(inpath, checksums=['md5', 'sha256'])
+                    # Section to create the necessary APTrust Info file
+                    APT_info_path = path.join(inpath, 'aptrust-info.txt')
+                    with open(APT_info_path, 'w') as APT_info:
+                        APT_info.write(f'Access: Institution\nDescription: University of Alabama at Birmingham\nStorage-Option: Standard\nTitle: {f.split(".")[0]}\n')
+                    newbag = bagit.make_bag(inpath, APT_bag_info, checksums=['md5', 'sha256'])
                     totalbags += 1
                     if newbag.is_valid():
                         validbags += 1
                     elif not newbag.is_valid():
                         messagebox.showwarning(message="Bag \'%s\' is not a valid bag." % f)
-                    # Section to create the necessary APTrust Info file
-                    apt_info_path = path.join(inpath, 'aptrust-info.txt')
-                    with open(apt_info_path, 'w') as apt_info:
-                        apt_info.write(f'Access: Institution\nDescription: University of Alabama at Birmingham\n
-                                        Storage-Option: Standard\nTitle: {f.split('.')[0]}')
                 # elif cont == False:
                 #     messagebox.showwarning(message="Skipped bagging of \'%s\'." %f)
         if not moreopts4 == 0:
