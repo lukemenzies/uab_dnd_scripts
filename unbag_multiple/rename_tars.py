@@ -8,7 +8,7 @@ count = 0
 while not stop:
     print(f'Please enter the path to the folder of TARs to be renamed.')
     tars_dir = input(': ').replace('\"', ' ').replace('\'', ' ').strip()
-    if path.isdir(tars_sdir):
+    if path.isdir(tars_dir):
         stop = True
         print(f'Renaming the items in:\n    {tars_dir}')
     else:
