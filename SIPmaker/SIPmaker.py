@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 ====================================================================
 SIP Maker - version 1.0.0
@@ -11,7 +11,7 @@ University of Alabama at Birmingham
 Birmingham, AL 35294
 
 Initial script created 2022-03-30 by L. I. Menzies
-This Version Last Updated 2023-03-30 by L. I. Menzies
+This Version Last Updated 2023-04-20 by L. I. Menzies
 ====================================================================
 For more information, see the UABL DnD collaboration wiki:
 https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
