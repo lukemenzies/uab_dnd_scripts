@@ -24,9 +24,18 @@ def upload_file(file_name, bucket, obj_name, akey, skey):
         return False
     return True
 
-
-bucket_name = 'aptrust.receiving.test.uab.edu'
-# bucket_name = 'aptrust.receiving.uab.edu'
+# Main
+asking = True
+while asking:
+    demo_prod = input(f'(D)emo or (P)roduction: ').strip()
+    if demo_prod.startswith('D') or demo_prod.startswith('d'):
+        bucket_name = 'aptrust.receiving.test.uab.edu'
+        asking = False
+    elif demo_prod.startswith('P') or demo_prod.startswith('p'):
+        bucket_name = 'aptrust.receiving.uab.edu'
+        asking = False
+    else:
+        print('\nPlease enter a \'D\' or a \'P\'.\n')
 access_key = input(f'Access Key: ').strip()
 secret_key = input(f'Secret Key: ').strip()
 stop = False

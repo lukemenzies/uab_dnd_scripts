@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 ====================================================================
 SIP Maker - version 1.0.0
@@ -11,7 +11,7 @@ University of Alabama at Birmingham
 Birmingham, AL 35294
 
 Initial script created 2022-03-30 by L. I. Menzies
-This Version Last Updated 2023-04-20 by L. I. Menzies
+This Version Last Updated 2023-04-27 by L. I. Menzies
 ====================================================================
 For more information, see the UABL DnD collaboration wiki:
 https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
@@ -19,7 +19,7 @@ or contact L. I. Menzies = menziesluke (at) gmail (dot) com
 ====================================================================
 """
 
-import bagit, csv, hashlib, io, math, mimetypes, sys, tarfile, time, uuid
+import bagit, bagit_profile, csv, hashlib, io, math, mimetypes, sys, tarfile, time, uuid
 import tkinter as tk
 from os import getcwd, getenv, listdir, mkdir, path, remove, rename, stat, walk
 from platform import system
@@ -483,23 +483,80 @@ class ObjFormatter:
             messagebox.showwarning(message="Created %d \'manifest.csv\' files." % manifiles)
         return runnext3
 
+    def make_valid_apt_bag(self, bpath):
+        bagname = path.basename(bpath)
+        aptrust_path = path.join(bpath, 'aptrust-info.txt')
+        tags_md5_path = path.join(bpath, 'tagmanifest-md5.txt')
+        tags_sha256_path = path.join(bpath, 'tagmanifest-sha256.txt')
+        md5tags_temppath = path.join(bpath, 'tagmanifest-md5-temp.txt')
+        sha256tags_temppath = path.join(bpath, 'tagmanifest-sha256-temp.txt')
+        # Create the aptrust-info.txt file
+        with open(aptrust_path, 'w') as apt_info:
+            apt_info.write(f'Access: Institution\nDescription: University of Alabama at Birmingham\nStorage-Option: Standard\nTitle: {bagname}\n')
+        firstrow_md5 = f'{self.md5hash(aptrust_path)} aptrust-info.txt\n'
+        firstrow_sha256 = f'{self.sha256hash(aptrust_path)} aptrust-info.txt\n'
+        # Rewrite the two tagmanifest files to include hashes for aptrust-info.txt
+        with open(tags_md5_path, 'r') as md5tags:
+            with open(md5tags_temppath, 'w') as md5tags_temp:
+                md5tags_temp.write(firstrow_md5)
+                for chars in md5tags.read():
+                    md5tags_temp.write(chars)
+        with open(tags_sha256_path, 'r') as sha256tags:
+            with open(sha256tags_temppath, 'w') as sha256tags_temp:
+                sha256tags_temp.write(firstrow_sha256)
+                for chars in sha256tags.read():
+                    sha256tags_temp.write(chars)
+        remove(tags_md5_path)
+        remove(tags_sha256_path)
+        rename(md5tags_temppath, tags_md5_path)
+        rename(sha256tags_temppath, tags_sha256_path)
+        """# Validate bag
+        bag = bagit.Bag(bpath)
+        profile = bagit_profile.Profile('https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json')
+        try:
+            profile.validate(bag)
+        except bagit.BagValidationError() as e:
+            print(e)
+            return False"""
+        newbag = bagit.Bag(bpath)
+        if not newbag.is_valid():
+            return False
+        return True
+
     def run_bagit(self, bagsdir, moreopts4):
         """ Bags all objects in a single directory, according to APTrust BagIt profile """
         validbags = 0
         totalbags = 0
+        # Defining MData tags
+        bag_info = {
+            'Bag-Count': '',
+            'Bag-Group-Identifier': '',
+            'BagIt-Profile-Identifier': 'https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json',
+            'Internal-Sender-Description': '',
+            'Internal-Sender-Identifier': '',
+            'Source-Organization': 'University of Alabama at Birmingham'
+            }
+        apt_info = {
+            'Access': 'Institution',
+            'Description': 'University of Alabama at Birmingham',
+            'Storage-Option': 'Standard'
+            }
         for f in listdir(bagsdir):
             inpath = path.join(bagsdir, f)
             cont = True
+            valid_APT_bag = False
             if path.isdir(inpath):
                 if path.exists(path.join(inpath, 'data')):
                     cont = messagebox.askyesno(message="It appears that \'%s\' is already a bag.\nBag it anyway?" % f)
                 if cont == True:
-                    newbag = bagit.make_bag(inpath, checksums=['md5', 'sha256'])
+                    # Section to create the necessary APTrust Info file
+                    newbag = bagit.make_bag(inpath, bag_info, checksums=['md5', 'sha256'])
                     totalbags += 1
-                    if newbag.is_valid():
+                    valid_APT_bag = self.make_valid_apt_bag(inpath)
+                    if valid_APT_bag:
                         validbags += 1
-                    elif not newbag.is_valid():
-                        messagebox.showwarning(message="Bag \'%s\' is not a valid bag." % f)
+                    elif not valid_APT_bag:
+                        messagebox.showwarning(message=f'Bag {f} is not a valid APTrust bag.')
                 # elif cont == False:
                 #     messagebox.showwarning(message="Skipped bagging of \'%s\'." %f)
         if not moreopts4 == 0:
@@ -525,13 +582,14 @@ class ObjFormatter:
         for i in listdir(tarfolder):
             infile = path.join(tarfolder, i)
             if path.isdir(infile):
-                outfile = path.join(outfolder, f'{path.splitext(i)[0]}.tar.gz')
+                outfile = path.join(outfolder, f'{path.splitext(i)[0]}.tar')
                 if path.exists(outfile):
                     messagebox.showwarning(
                         message=f'The TAR file: {outfile}\nalready exists!\nTar archive not created.')
                     alreadytar += 1
                 elif not path.exists(outfile):
-                    with tarfile.open(outfile, 'w:gz') as newtar:
+                    # with tarfile.open(outfile, 'w:gz') as newtar:
+                    with tarfile.open(outfile, 'w') as newtar:
                         tarname = path.relpath(infile, tarfolder)
                         newtar.add(infile, arcname='%s' % tarname)
                     tarfiles += 1
