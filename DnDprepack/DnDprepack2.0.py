@@ -211,7 +211,7 @@ class GetValues:
                 root.quit()
         datetime = time.strftime("%Y%b%d_%H%M%S")
         try:
-            newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w')
+            newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', newline='')
         except:
             messagebox.showwarning(message='There was an error creating the CSV loader file.')
             root.quit()
