@@ -160,10 +160,8 @@ class GetValues:
             # script only accepts file formats of the proper type that do not begin with '.'
             if path.splitext(files)[1] in accepted_files and not files.startswith('.'):
                 oldfilepath = path.join(in_dir, files)
-                print(f'old: {oldfilepath}')
                 itemname = files[0:-10]
                 itemfolder = path.join(objects, itemname)
-                print(f'item: {itemname}')
                 if not itemname in obj_list:
                     obj_list.append(itemname)
                     try:
