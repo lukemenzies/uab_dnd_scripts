@@ -285,7 +285,7 @@ class ObjFormatter:
         csvfi = self.e3.get()
         csvpath = path.join(str(csvfi))
         if path.exists(csvpath) and path.splitext(csvpath)[1] == '.csv':
-            with open(csvfi, 'r', encoding='utf-8') as cfile:
+            with open(csvfi, 'r', encoding='utf-8', newline='') as cfile:
                 hreader = csv.DictReader(cfile)
                 opts = hreader.fieldnames
         else:
@@ -301,7 +301,7 @@ class ObjFormatter:
         rfiles = 0
         overwrite_all = False
         firstone = True
-        with open(csvIn, 'r', encoding='utf-8') as incsv:
+        with open(csvIn, 'r', encoding='utf-8', newline='') as incsv:
             reader = csv.DictReader(incsv)
             headers = reader.fieldnames
             verifyHeadrs = ['System UUID', 'Local ID', 'Owned By', 'Collection', 'Item Type', 'Packaged By']
@@ -328,7 +328,7 @@ class ObjFormatter:
                     skip1 = True
                 if skip1 == False:
                     metafile = path.join(foldpath, 'metadata.csv')
-                    with open(metafile, 'w') as newmeta:
+                    with open(metafile, 'w', encoding='utf-8', newline='') as newmeta:
                         metawriter = csv.DictWriter(newmeta, fieldnames=headers)
                         metawriter.writeheader()
                         metawriter.writerow(row)
@@ -429,7 +429,7 @@ class ObjFormatter:
             if skipit == False:
                 manifiles += 1
                 temp_path = path.join(objpath, 'temp_manifest.csv')
-                tempmani = open(temp_path, 'w', encoding='utf-8')
+                tempmani = open(temp_path, 'w', encoding='utf-8', newline='')
                 temp_writer = csv.writer(tempmani)
                 headrow = ['Filename', 'Relative Path', 'Filesize', 'Filetype', 'C-Time', 'Modified', 'Accessed',
                             'MD5', 'SHA256', 'ChecksumDateTime', 'mode', 'inode',
@@ -473,11 +473,11 @@ class ObjFormatter:
                             temp_writer.writerow(newrow)
                 tempmani.close()
                 # Sort the temporary manifest just created by Relative Path
-                with open(temp_path, 'r') as unsorted_csv:
+                with open(temp_path, 'r', encoding='utf-8', newline='') as unsorted_csv:
                     unsort_reader = csv.DictReader(unsorted_csv)
                     sorted_list = sorted(unsort_reader, key=lambda row:(row['Relative Path']), reverse=False)
                 m = path.join(objpath, 'manifest.csv')
-                with open(m, 'w') as manifest:
+                with open(m, 'w', encoding='utf-8', newline='') as manifest:
                     mwriter = csv.DictWriter(manifest, fieldnames=headrow)
                     mwriter.writeheader()
                     for sortrow in sorted_list:
@@ -647,7 +647,7 @@ class ObjFormatter:
         if not path.exists(outdir):
             mkdir(outdir)
         tar_list = open(path.join(outdir, f'transfer_{time.strftime("%Y%b%d_%H%M%S")}.csv'),
-                        'w', encoding='utf-8')
+                        'w', encoding='utf-8', newline='')
         sorted_tarlist = sorted([t for t in listdir(indir) if '.tar' in t])
         for tars in sorted_tarlist:
             tar_path = path.join(indir, tars)
