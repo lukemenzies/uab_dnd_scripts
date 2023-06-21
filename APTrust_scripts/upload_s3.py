@@ -52,7 +52,7 @@ while not stop:
         stop = False
 for files in listdir(upload_dir):
     filepath = path.join(upload_dir, files)
-    if path.isfile(filepath):
+    if path.isfile(filepath) and not files.startswith('.'):
         count += 1
         success = upload_file(filepath, bucket_name, files, access_key, secret_key)
         if success:
