@@ -26,6 +26,9 @@ blazegold = '#%02x%02x%02x' % (170, 151, 103)
 smoke = '#%02x%02x%02x' % (128, 130, 133)
 gray = '#%02x%02x%02x' % (215, 210, 203)
 
+""" Global Variable for User OS"""
+USER_OS = system()
+
 class GetValues:
     def __init__(self, root):
         frame001 = Frame(root)
@@ -210,11 +213,18 @@ class GetValues:
                 messagebox.showwarning(message=f'There was an error creating the \'csv_loaders\' folder.')
                 root.quit()
         datetime = time.strftime("%Y%b%d_%H%M%S")
-        try:
-            newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', newline='')
-        except:
-            messagebox.showwarning(message='There was an error creating the CSV loader file.')
-            root.quit()
+        if USER_OS == 'Windows':
+            try:
+                newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', newline='', encoding='UTF-8')
+            except:
+                messagebox.showwarning(message='There was an error creating the CSV loader file.')
+                root.quit()
+        else:
+            try:
+                newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', encoding='UTF-8')
+            except:
+                messagebox.showwarning(message='There was an error creating the CSV loader file.')
+                root.quit()
         colnames = ['System UUID', 'Local ID', 'Owned By', 'Collection', 'Item Type', 'Packaged By']
         writer = csv.writer(newCSV)
         writer.writerow(colnames)

@@ -40,6 +40,9 @@ blazegold = '#%02x%02x%02x' % (170, 151, 103)
 smoke = '#%02x%02x%02x' % (128, 130, 133)
 gray = '#%02x%02x%02x' % (215, 210, 203)
 
+""" Global Variable for User OS"""
+USER_OS = system()
+
 def resource_path(relative_path):
     """ Fixes the problem with PyInstaller not hooking associated files """
     base_path = getattr(sys, '_MEIPASS', path.dirname(path.abspath(__file__)))
@@ -285,7 +288,7 @@ class ObjFormatter:
         csvfi = self.e3.get()
         csvpath = path.join(str(csvfi))
         if path.exists(csvpath) and path.splitext(csvpath)[1] == '.csv':
-            with open(csvfi, 'r', encoding='utf-8', newline='') as cfile:
+            with open(csvfi, 'r', encoding='UTF-8') as cfile:
                 hreader = csv.DictReader(cfile)
                 opts = hreader.fieldnames
         else:
@@ -301,7 +304,7 @@ class ObjFormatter:
         rfiles = 0
         overwrite_all = False
         firstone = True
-        with open(csvIn, 'r', encoding='utf-8', newline='') as incsv:
+        with open(csvIn, 'r', encoding='UTF-8') as incsv:
             reader = csv.DictReader(incsv)
             headers = reader.fieldnames
             verifyHeadrs = ['System UUID', 'Local ID', 'Owned By', 'Collection', 'Item Type', 'Packaged By']
@@ -328,10 +331,16 @@ class ObjFormatter:
                     skip1 = True
                 if skip1 == False:
                     metafile = path.join(foldpath, 'metadata.csv')
-                    with open(metafile, 'w', encoding='utf-8', newline='') as newmeta:
-                        metawriter = csv.DictWriter(newmeta, fieldnames=headers)
-                        metawriter.writeheader()
-                        metawriter.writerow(row)
+                    if USER_OS == 'Windows':
+                        with open(metafile, 'w', newline='', encoding='UTF-8') as newmeta:
+                            metawriter = csv.DictWriter(newmeta, fieldnames=headers)
+                            metawriter.writeheader()
+                            metawriter.writerow(row)
+                    else:
+                        with open(metafile, 'w', encoding='UTF-8') as newmeta:
+                            metawriter = csv.DictWriter(newmeta, fieldnames=headers)
+                            metawriter.writeheader()
+                            metawriter.writerow(row)
                     nfiles += 1
                     newmeta.close()
                     rdfok = False
@@ -429,7 +438,10 @@ class ObjFormatter:
             if skipit == False:
                 manifiles += 1
                 temp_path = path.join(objpath, 'temp_manifest.csv')
-                tempmani = open(temp_path, 'w', encoding='utf-8', newline='')
+                if USER_OS == 'Windows':
+                    tempmani = open(temp_path, 'w', newline='', encoding='UTF-8')
+                else:
+                    tempmani = open(temp_path, 'w', encoding='UTF-8')
                 temp_writer = csv.writer(tempmani)
                 headrow = ['Filename', 'Relative Path', 'Filesize', 'Filetype', 'C-Time', 'Modified', 'Accessed',
                             'MD5', 'SHA256', 'ChecksumDateTime', 'mode', 'inode',
@@ -473,15 +485,22 @@ class ObjFormatter:
                             temp_writer.writerow(newrow)
                 tempmani.close()
                 # Sort the temporary manifest just created by Relative Path
-                with open(temp_path, 'r', encoding='utf-8', newline='') as unsorted_csv:
+                with open(temp_path, 'r', encoding='UTF-8') as unsorted_csv:
                     unsort_reader = csv.DictReader(unsorted_csv)
                     sorted_list = sorted(unsort_reader, key=lambda row:(row['Relative Path']), reverse=False)
                 m = path.join(objpath, 'manifest.csv')
-                with open(m, 'w', encoding='utf-8', newline='') as manifest:
-                    mwriter = csv.DictWriter(manifest, fieldnames=headrow)
-                    mwriter.writeheader()
-                    for sortrow in sorted_list:
-                        mwriter.writerow(sortrow)
+                if USER_OS == 'Windows':
+                    with open(m, 'w', newline='', encoding='UTF-8') as manifest:
+                        mwriter = csv.DictWriter(manifest, fieldnames=headrow)
+                        mwriter.writeheader()
+                        for sortrow in sorted_list:
+                            mwriter.writerow(sortrow)
+                else:
+                    with open(m, 'w', encoding='UTF-8') as manifest:
+                        mwriter = csv.DictWriter(manifest, fieldnames=headrow)
+                        mwriter.writeheader()
+                        for sortrow in sorted_list:
+                            mwriter.writerow(sortrow)
                 if path.exists(m):
                     remove(temp_path)
         if not moreopts3 == 0:
