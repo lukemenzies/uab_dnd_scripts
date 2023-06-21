@@ -64,10 +64,10 @@ class ToggleFrame(Frame):
         # Radio button for APTrust Storage option 'Standard' or 'Glacier-Deep-OH'
         self.aptStorage = StringVar()
         self.aptStorage.set('Glacier-Deep-OH')
-        self.apt_standard = Radiobutton(self.show_frame, text='Standard', variable=self.aptStorage, value = 'Standard',
+        self.apt_standard = Radiobutton(self.show_frame, text='Standard', variable=self.aptStorage, value='Standard',
                                         fg='black', bg=gray, bd=4, font=('Arial', basefont), justify='left')
         self.apt_standard.grid(column=0, row=0, pady=0, padx=xpad, sticky='w')
-        self.apt_glacier_deep = Radiobutton(self.show_frame, text='GlacierDeep', variable=self.aptStorage, value = 'Glacier-Deep-OH',
+        self.apt_glacier_deep = Radiobutton(self.show_frame, text='GlacierDeep', variable=self.aptStorage, value='Glacier-Deep-OH',
                                         fg='black', bg=gray, bd=4, font=('Arial', basefont), justify='left')
         self.apt_glacier_deep.grid(column=1, row=0, pady=0, padx=xpad, sticky='w')
         self.space = Label(self.show_frame, text='')
@@ -514,7 +514,7 @@ class ObjFormatter:
             messagebox.showwarning(message="Created %d \'manifest.csv\' files." % manifiles)
         return runnext3
 
-    def make_valid_apt_bag(self, bpath):
+    def make_valid_apt_bag(self, bpath, storage):
         bagname = path.basename(bpath)
         aptrust_path = path.join(bpath, 'aptrust-info.txt')
         tags_md5_path = path.join(bpath, 'tagmanifest-md5.txt')
@@ -523,7 +523,7 @@ class ObjFormatter:
         sha256tags_temppath = path.join(bpath, 'tagmanifest-sha256-temp.txt')
         # Create the aptrust-info.txt file
         with open(aptrust_path, 'w') as apt_info:
-            apt_info.write(f'Access: Institution\nDescription: University of Alabama at Birmingham\nStorage-Option: Standard\nTitle: {bagname}\n')
+            apt_info.write(f'Access: Institution\nDescription: University of Alabama at Birmingham\nStorage-Option: {storage}\nTitle: {bagname}\n')
         firstrow_md5 = f'{self.md5hash(aptrust_path)} aptrust-info.txt\n'
         firstrow_sha256 = f'{self.sha256hash(aptrust_path)} aptrust-info.txt\n'
         # Rewrite the two tagmanifest files to include hashes for aptrust-info.txt
@@ -571,11 +571,6 @@ class ObjFormatter:
             'Internal-Sender-Identifier': '',
             'Source-Organization': 'University of Alabama at Birmingham'
             }
-        apt_info = {
-            'Access': 'Institution',
-            'Description': 'University of Alabama at Birmingham',
-            'Storage-Option': storage_opt
-            }
         for f in listdir(bagsdir):
             inpath = path.join(bagsdir, f)
             cont = True
@@ -587,7 +582,7 @@ class ObjFormatter:
                     # Section to create the necessary APTrust Info file
                     newbag = bagit.make_bag(inpath, bag_info, checksums=['md5', 'sha256'])
                     totalbags += 1
-                    valid_APT_bag = self.make_valid_apt_bag(inpath)
+                    valid_APT_bag = self.make_valid_apt_bag(inpath, storage_opt)
                     if valid_APT_bag:
                         validbags += 1
                     elif not valid_APT_bag:
