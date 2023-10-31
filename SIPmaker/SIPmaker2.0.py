@@ -315,12 +315,13 @@ class ObjFormatter:
                 skip1 = False
                 foldname = row['%s' % locids]
                 foldpath = path.join(fpath, foldname)
-                if row[1].strip() == '':
+                # Check if Local ID is blank
+                if row['Local ID'].strip() == '':
                     skip1 = True
                     discontinue = messagebox.askyesno(
                         message=f"Item \'{foldname}\' has no Local ID.\nDo you want to quit SIPmaker?")
                     if discontinue == True:
-                        root.quit()
+                        sys.exit()
                 if not path.exists(foldpath):
                     skip1 = True
                 # The function skips objects that are Bags or already have a
