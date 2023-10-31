@@ -315,6 +315,12 @@ class ObjFormatter:
                 skip1 = False
                 foldname = row['%s' % locids]
                 foldpath = path.join(fpath, foldname)
+                if row[1].strip() == '':
+                    skip1 = True
+                    discontinue = messagebox.askyesno(
+                        message=f"Item \'{foldname}\' has no Local ID.\nDo you want to quit SIPmaker?")
+                    if discontinue == True:
+                        root.quit()
                 if not path.exists(foldpath):
                     skip1 = True
                 # The function skips objects that are Bags or already have a
@@ -322,7 +328,7 @@ class ObjFormatter:
                 # for these objects also.
                 if path.exists(path.join(foldpath, 'data')):
                     skip1 = messagebox.askyesno(
-                        message="It appears that \'%s\' is a bag.\n\nSkip creating \'metadata.csv\' for this one item?" % foldname)
+                        message=f"It appears that \'{foldname}\' is a bag.\n\nSkip creating \'metadata.csv\' for this one item?")
                 if path.exists(path.join(foldpath, 'metadata.csv')) and firstone == True:
                     firstone = False
                     overwrite_all = messagebox.askyesno(
