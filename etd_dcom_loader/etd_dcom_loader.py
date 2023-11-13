@@ -137,6 +137,10 @@ class GetValues:
             new_row[7] = soup.DISS_author.DISS_surname.string or "" # author1_lname
             try:
                 new_row[8] = soup.DISS_author.DISS_suffix.string # author1_suffix
+                if new_row[8] == None:
+                    new_row[8] = ""
+                elif new_row[8] == 'None':
+                    new_row[8] = ""
             except:
                 new_row[8] = "" # author1_suffix
             # new_row[9] = '' # author1_email
@@ -158,6 +162,10 @@ class GetValues:
                 cmte_sname = tag.DISS_surname.string or ""
                 try:
                     cmte_sx = tag.DISS_suffix.string
+                    if cmte_sx == None:
+                        cmte_sx = ""
+                    elif cmte_sx == 'None':
+                        cmte_sx = ""
                 except:
                     cmte_sx = ""
                 cmte_name = f'{cmte_fname} {cmte_mname} {cmte_sname} {cmte_sx}'
