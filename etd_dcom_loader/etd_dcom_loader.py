@@ -29,9 +29,6 @@ blazegold = '#%02x%02x%02x' % (170, 151, 103)
 smoke = '#%02x%02x%02x' % (128, 130, 133)
 gray = '#%02x%02x%02x' % (215, 210, 203)
 
-""" Global Variable for User OS"""
-USER_OS = system()
-
 class GetValues:
     def __init__(self, root):
         frame001 = Frame(root)
@@ -126,7 +123,7 @@ class GetValues:
         # assigning 'NoneType' to any of the variables, which throws an error.
         # (For example, if there is no "suffix")
         with open(xml_path, 'r', encoding='utf-8') as xml_file:
-            soup = BeautifulSoup(xml_file, 'xml')
+            soup = BeautifulSoup(xml_file, features='xml', from_encoding='utf-8')
             new_row = []
             for n in range(28):
                 new_row.append('')
@@ -226,23 +223,39 @@ class GetValues:
         return True
 
     def make_csv_log(self, unzipped_dir):
+        op_sys = system()
         pdfs_found = 0
         number_rows = 0
         dtime = strftime("%Y%b%d_%H%M%S")
         csv_path = path.join(unzipped_dir, f'etds_log{dtime}.csv')
-        with open(csv_path, 'w', encoding='UTF-8') as cfile:
-            cwriter = csv.writer(cfile)
-            for fol in listdir(unzipped_dir):
-                folpath = path.join(unzipped_dir, fol)
-                if path.isdir(folpath):
-                    diss_filename = 'unknown'
-                    for f in listdir(folpath):
-                        if path.splitext(f)[1] == '.pdf':
-                            diss_filename = f
-                            pdfs_found += 1
-                    row = [fol, diss_filename]
-                    cwriter.writerow(row)
-                    number_rows += 1
+        if op_sys == 'Windows':
+            with open(csv_path, 'w', newline='', encoding='UTF-8') as cfile:
+                cwriter = csv.writer(cfile)
+                for fol in listdir(unzipped_dir):
+                    folpath = path.join(unzipped_dir, fol)
+                    if path.isdir(folpath):
+                        diss_filename = 'unknown'
+                        for f in listdir(folpath):
+                            if path.splitext(f)[1] == '.pdf':
+                                diss_filename = f
+                                pdfs_found += 1
+                        row = [fol, diss_filename]
+                        cwriter.writerow(row)
+                        number_rows += 1
+        else:
+            with open(csv_path, 'w', encoding='UTF-8') as cfile:
+                cwriter = csv.writer(cfile)
+                for fol in listdir(unzipped_dir):
+                    folpath = path.join(unzipped_dir, fol)
+                    if path.isdir(folpath):
+                        diss_filename = 'unknown'
+                        for f in listdir(folpath):
+                            if path.splitext(f)[1] == '.pdf':
+                                diss_filename = f
+                                pdfs_found += 1
+                        row = [fol, diss_filename]
+                        cwriter.writerow(row)
+                        number_rows += 1
         messagebox.showinfo(message=f'Found {pdfs_found} PDF files\nand created {number_rows} rows.')
         return True
 
