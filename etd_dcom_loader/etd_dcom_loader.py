@@ -7,7 +7,7 @@ Output is an Excel spreadsheet for batch upload to Digital Commons
 Last modified by L. I. Menzies 2023-11-08
 """
 
-import lxml, openpyxl, zipfile
+import csv, lxml, openpyxl, zipfile
 import tkinter as tk
 from bs4 import BeautifulSoup
 from os import getcwd, getenv, listdir, mkdir, path, remove
@@ -60,18 +60,26 @@ class GetValues:
         browse2 = Button(frame001, text='Browse', command=lambda: self.ask_folder(procfol))
         browse2.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
-        #
+        # Checkbutton to UnZip all
         self.frame002 = Frame(root)
         self.extractvar = IntVar(self.frame002)
-        collate_chk = Checkbutton(self.frame002, text='Extract Zips', variable=self.extractvar, fg='black',
+        extract_chk = Checkbutton(self.frame002, text='Extract Zips', variable=self.extractvar, fg='black',
                                 bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        collate_chk.grid(column=2, row=0, pady=5, padx=5)
+        extract_chk.grid(column=2, row=0, pady=5, padx=5)
         self.extractvar.set(1)
-        #
-        self.excelvar = IntVar(self.frame002)
-        csv_chk = Checkbutton(self.frame002, text='Generate\nExcel Loader', variable=self.excelvar, fg='black',
+        # Checkbutton to Generate CSV
+        self.csvvar = IntVar(self.frame002)
+        excel_chk = Checkbutton(self.frame002, text='Generate\nCSV Log', variable=self.csvvar, fg='black',
                                 bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        csv_chk.grid(column=3, row=0, pady=5, padx=5)
+        excel_chk.grid(column=3, row=0, pady=5, padx=5)
+        self.csvvar.set(1)
+        self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
+        self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
+        # Checkbutton to Generate Excel Loader
+        self.excelvar = IntVar(self.frame002)
+        excel_chk = Checkbutton(self.frame002, text='Generate\nExcel Loader', variable=self.excelvar, fg='black',
+                                bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
+        excel_chk.grid(column=4, row=0, pady=5, padx=5)
         self.excelvar.set(1)
         self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
         self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
@@ -176,7 +184,7 @@ class GetValues:
             # new_row[24] = '' # season
             # new_row[25] = '' # pubmedid
             new_row[26] = f'{soup.DISS_degree.string.replace(".", "").strip()} '\
-                                    + f'\+ {soup.DISS_inst_contact.string}' # degree + dept.
+                                    + f'+ {soup.DISS_inst_contact.string}' # degree + dept.
             # new_row[27] = '' # uuid
         return new_row
 
@@ -210,9 +218,32 @@ class GetValues:
         for mdata_path in xml_paths:
             next_row = self.get_meta_from_xml(mdata_path)
             all_rows.append(next_row)
+            etds_added += 1
         data_frame = DataFrame(all_rows)
         data_frame.to_excel(excel_writer, 'Sheet1', index=False)
         excel_writer.close()
+        messagebox.showinfo(message=f'Found {etds_found} XML files and\ncreated {etds_added} Excel rows.')
+        return True
+
+    def make_csv_log(self, unzipped_dir):
+        pdfs_found = 0
+        number_rows = 0
+        dtime = strftime("%Y%b%d_%H%M%S")
+        csv_path = path.join(unzipped_dir, f'etds_log{dtime}.csv')
+        with open(csv_path, 'w', encoding='UTF-8') as cfile:
+            cwriter = csv.writer(cfile)
+            for fol in listdir(unzipped_dir):
+                folpath = path.join(unzipped_dir, fol)
+                if path.isdir(folpath):
+                    diss_filename = 'unknown'
+                    for f in listdir(folpath):
+                        if path.splitext(f)[1] == '.pdf':
+                            diss_filename = f
+                            pdfs_found += 1
+                    row = [fol, diss_filename]
+                    cwriter.writerow(row)
+                    number_rows += 1
+        messagebox.showinfo(message=f'Found {pdfs_found} PDF files\nand created {number_rows} rows.')
         return True
 
     def unzip_ETDs(self):
@@ -234,9 +265,10 @@ class GetValues:
             if not path.isdir(zip_path):
                 if path.splitext(z)[1].lower() == '.zip':
                     zips += 1
+                    extract_dir = path.join(unzip_folder, path.splitext(z)[0])
                     try:
                         with zipfile.ZipFile(zip_path, 'r') as ex_zip:
-                            ex_zip.extractall(unzip_folder)
+                            ex_zip.extractall(extract_dir)
                     except Exception as e:
                         messagebox.showwarning(message=f'There was an error extracting:\n{z}\nError = {e.message}\n\nSkipping...')
                     else:
@@ -247,6 +279,7 @@ class GetValues:
     def run_procs(self):
         successful = False
         unzip_yesno = self.extractvar.get()
+        csv_yesno = self.csvvar.get()
         excel_yesno = self.excelvar.get()
         dirs = self.get_entries()
         unzip_dir = dirs[0]
@@ -254,6 +287,11 @@ class GetValues:
             successful, unzip_dir = self.unzip_ETDs()
             if successful == False:
                 messagebox.showwarning(mesage=f'Something went wrong during\nunzipping. Quitting.')
+                root.quit()
+        if csv_yesno == 1:
+            successful = self.make_csv_log(unzip_dir)
+            if successful == False:
+                messagebox.showwarning(mesage=f'Something went wrong during\nCSV logging. Quitting.')
                 root.quit()
         if excel_yesno == 1:
             successful = self.make_excel(unzip_dir)
@@ -269,7 +307,7 @@ class GetValues:
 
 
 root = tk.Tk()
-w = 646
+w = 676
 h = 298
 ws = root.winfo_screenwidth()
 hs = root.winfo_screenheight()
