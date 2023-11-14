@@ -122,10 +122,19 @@ class GetValues:
         # Note: the use of 'or ""' in the variable assignments below is to avoid
         # assigning 'NoneType' to any of the variables, which throws an error.
         # (For example, if there is no "suffix")
-        # with open(xml_path, 'r', encoding='utf-8') as xml_file:
-        with open(xml_path, 'rb') as xml_file:
-            # soup = BeautifulSoup(xml_file, features='xml', from_encoding='utf-8')
+        # with open(xml_path, 'r', encoding='ISO-8859-1') as xml_file:
+        #     soup = BeautifulSoup(xml_file, features='xml')
+        bad_yesno = False
+        try:
+            xml_file = open(xml_path, 'r', encoding='ISO-8859-1')
             soup = BeautifulSoup(xml_file, features='xml')
+        except UnicodeDecodeError:
+            messagebox.showwarning(message=f'The file {path.basename(xml_path)}\nhas different encoding than\nwhat was expected. Skipping it.')
+            bad_yesno = True
+        except:
+            messagebox.showwarning(message=f'There was an unknown error processing\n{path.basename(xml_path)}. Skipping it.')
+            bad_yesno = True
+        else:
             new_row = []
             for n in range(28):
                 new_row.append('')
@@ -193,7 +202,8 @@ class GetValues:
             new_row[26] = f'{soup.DISS_degree.string.replace(".", "").strip()} '\
                                     + f'+ {soup.DISS_inst_contact.string}' # degree + dept.
             # new_row[27] = '' # uuid
-        return new_row
+            xml_file.close()
+        return new_row, bad_yesno
 
     def make_excel(self, etds_dir):
         entries = self.get_entries()
@@ -222,14 +232,21 @@ class GetValues:
                 'comments', 'document_type', 'doi', 'embargo_date', 'isbn',
                 'publication_date', 'season', 'pubmedid', 'subject_area', 'uuid']
         all_rows.append(header_row)
+        skipped = 0
         for mdata_path in xml_paths:
-            next_row = self.get_meta_from_xml(mdata_path)
-            all_rows.append(next_row)
-            etds_added += 1
+            next_row, badfile = self.get_meta_from_xml(mdata_path)
+            if not badfile:
+                all_rows.append(next_row)
+                etds_added += 1
+            else:
+                skipped += 1
         data_frame = DataFrame(all_rows)
         data_frame.to_excel(excel_writer, 'Sheet1', index=False)
         excel_writer.close()
-        messagebox.showinfo(message=f'Found {etds_found} XML files and\ncreated {etds_added} Excel rows.')
+        if skipped == 0:
+            messagebox.showinfo(message=f'Found {etds_found} XML files.\nCreated {etds_added} Excel rows.')
+        else:
+            messagebox.showinfo(message=f'Found {etds_found} XML files.\nCreated {etds_added} Excel rows.\nSkipped {skipped} XML files.')
         return True
 
     def make_csv_log(self, unzipped_dir):
