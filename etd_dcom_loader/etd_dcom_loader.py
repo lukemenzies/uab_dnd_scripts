@@ -122,8 +122,10 @@ class GetValues:
         # Note: the use of 'or ""' in the variable assignments below is to avoid
         # assigning 'NoneType' to any of the variables, which throws an error.
         # (For example, if there is no "suffix")
-        with open(xml_path, 'r', encoding='utf-8') as xml_file:
-            soup = BeautifulSoup(xml_file, features='xml', from_encoding='utf-8')
+        # with open(xml_path, 'r', encoding='utf-8') as xml_file:
+        with open(xml_path, 'rb') as xml_file:
+            # soup = BeautifulSoup(xml_file, features='xml', from_encoding='utf-8')
+            soup = BeautifulSoup(xml_file, features='xml')
             new_row = []
             for n in range(28):
                 new_row.append('')
