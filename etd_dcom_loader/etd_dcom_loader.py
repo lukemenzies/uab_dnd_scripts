@@ -4,7 +4,7 @@ Script for unpacking ETD's from ProQuest
 Input is a folder containing one or more ETD Zips
 Output is an Excel spreadsheet for batch upload to Digital Commons
 
-Last modified by L. I. Menzies 2023-11-08
+Last modified by L. I. Menzies 2023-11-15
 """
 
 import csv, lxml, openpyxl, zipfile
@@ -18,7 +18,7 @@ from shutil import copyfile, rmtree
 from time import strftime
 from tkinter import *
 from tkinter import messagebox
-from tkinter.filedialog import askopenfilename, askdirectory
+from tkinter.filedialog import askdirectory
 
 """ Global color definitions, w/ official UAB RGB values """
 uabgreen = '#%02x%02x%02x' % (30, 107, 82)
