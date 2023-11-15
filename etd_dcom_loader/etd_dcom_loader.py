@@ -60,7 +60,7 @@ class GetValues:
         # Checkbutton to UnZip all
         self.frame002 = Frame(root)
         self.extractvar = IntVar(self.frame002)
-        extract_chk = Checkbutton(self.frame002, text='Extract Zips', variable=self.extractvar, fg='black',
+        extract_chk = Checkbutton(self.frame002, text='Extract\nZips', variable=self.extractvar, fg='black',
                                 bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
         extract_chk.grid(column=2, row=0, pady=5, padx=5)
         self.extractvar.set(1)
@@ -72,12 +72,28 @@ class GetValues:
         self.csvvar.set(1)
         self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
         self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
+        # Checkbutton to Copy PDF and XML files to separate batch folders
+        self.copyvar = IntVar(self.frame002)
+        copy_chk = Checkbutton(self.frame002, text='Copy PDF\n+ XML Files', variable=self.copyvar, fg='black',
+                                bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
+        copy_chk.grid(column=4, row=0, pady=5, padx=5)
+        self.copyvar.set(1)
+        self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
+        self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
         # Checkbutton to Generate Excel Loader
         self.excelvar = IntVar(self.frame002)
         excel_chk = Checkbutton(self.frame002, text='Generate\nExcel Loader', variable=self.excelvar, fg='black',
                                 bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        excel_chk.grid(column=4, row=0, pady=5, padx=5)
+        excel_chk.grid(column=5, row=0, pady=5, padx=5)
         self.excelvar.set(1)
+        self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
+        self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
+        # Checkbutton to Suppress "Success" Messages after Each Task
+        self.suppressvar = IntVar(self.frame002)
+        suppress_chk = Checkbutton(self.frame002, text='Suppress\nMessages', variable=self.suppressvar, fg='black',
+                                bg=smoke, relief='sunken', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
+        suppress_chk.grid(column=6, row=0, pady=5, padx=5)
+        self.suppressvar.set(1)
         self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
         self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
         #
@@ -205,7 +221,7 @@ class GetValues:
             xml_file.close()
         return new_row, bad_yesno
 
-    def make_excel(self, etds_dir):
+    def make_excel(self, etds_dir, suppress):
         entries = self.get_entries()
         excel_folder = entries[1]
         timestamp = strftime("%Y%b%d_%H%M%S")
@@ -244,12 +260,70 @@ class GetValues:
         data_frame.to_excel(excel_writer, 'Sheet1', index=False)
         excel_writer.close()
         if skipped == 0:
-            messagebox.showinfo(message=f'Found {etds_found} XML files.\nCreated {etds_added} Excel rows.')
+            if not suppress == 1:
+                messagebox.showinfo(message=f'Found {etds_found} XML files.\nCreated {etds_added} Excel rows.')
         else:
-            messagebox.showinfo(message=f'Found {etds_found} XML files.\nCreated {etds_added} Excel rows.\nSkipped {skipped} XML files.')
+            if not suppress == 1:
+                messagebox.showinfo(message=f'Found {etds_found} XML files.\nCreated {etds_added} Excel rows.\nSkipped {skipped} XML files.')
         return True
 
-    def make_csv_log(self, unzipped_dir):
+    def copy_files(self, etds_dir, suppress):
+        pdf_found = 0
+        xml_found = 0
+        new = 0
+        new_limit = 10
+        # Define the destination folders "XMLs" and "PDFs"
+        destdir = path.join(path.dirname(etds_dir), f'{path.basename(etds_dir)}-copies')
+        while path.exists(destdir):
+            new += 1
+            if new >= new_limit:
+                messagebox.showwarning(message=f'You already have 10 \"copies\" folders!\nDelete some of these before trying\nthis function again.')
+                return False
+            destdir = path.join(path.dirname(etds_dir), f'{path.basename(etds_dir)}-copies-{str(new)}')
+        try:
+            mkdir(destdir)
+        except Exception as e:
+            messagebox.showwarning(message=f'Error: {e}\nQuitting copy function.')
+            return False
+        dest_pdfs = path.join(destdir, 'PDFs')
+        try:
+            mkdir(dest_pdfs)
+        except FileExistsError:
+            rmtree(dest_pdfs)
+            mkdir(dest_pdfs)
+        except Exception as e:
+            messagebox.showwarning(message=f'Error: {e}\nQuitting copy function.')
+            return False
+        dest_xmls = path.join(destdir, 'XMLs')
+        try:
+            mkdir(dest_xmls)
+        except FileExistsError:
+            rmtree(dest_xmls)
+            mkdir(dest_xmls)
+        except Exception as e:
+            messagebox.showwarning(message=f'Error: {e}\nQuitting copy function.')
+            return False
+        for fols in listdir(etds_dir):
+            fols_path = path.join(etds_dir, fols)
+            if path.isdir(fols_path):
+                for i in listdir(fols_path):
+                    ipath = path.join(fols_path, i)
+                    if not path.isdir(ipath):
+                        if path.splitext(i)[1].lower() == '.pdf':
+                            pdf_found += 1
+                            src_path = ipath
+                            dst_path = path.join(dest_pdfs, i)
+                            copyfile(src_path, dst_path)
+                        elif path.splitext(i)[1].lower() == '.xml':
+                            xml_found += 1
+                            src_path = ipath
+                            dst_path = path.join(dest_xmls, i)
+                            copyfile(src_path, dst_path)
+        if not suppress == 1:
+            messagebox.showinfo(message=f'Found and copied:\n{pdf_found} PDFs\n{xml_found} XMLs')
+        return True
+
+    def make_csv_log(self, unzipped_dir, suppress):
         op_sys = system()
         pdfs_found = 0
         number_rows = 0
@@ -262,11 +336,19 @@ class GetValues:
                     folpath = path.join(unzipped_dir, fol)
                     if path.isdir(folpath):
                         diss_filename = 'unknown'
+                        extra = 0
                         for f in listdir(folpath):
-                            if path.splitext(f)[1] == '.pdf':
+                            fpath = path.join(folpath, f)
+                            if path.splitext(f)[1].lower() == '.pdf':
                                 diss_filename = f
                                 pdfs_found += 1
-                        row = [fol, diss_filename]
+                            elif path.isdir(fpath):
+                                extra += 1
+                        if not extra == 0:
+                            additional = 'yes'
+                        else:
+                            additional = ''
+                        row = [fol, diss_filename, additional]
                         cwriter.writerow(row)
                         number_rows += 1
         else:
@@ -277,16 +359,17 @@ class GetValues:
                     if path.isdir(folpath):
                         diss_filename = 'unknown'
                         for f in listdir(folpath):
-                            if path.splitext(f)[1] == '.pdf':
+                            if path.splitext(f)[1].lower() == '.pdf':
                                 diss_filename = f
                                 pdfs_found += 1
                         row = [fol, diss_filename]
                         cwriter.writerow(row)
                         number_rows += 1
-        messagebox.showinfo(message=f'Found {pdfs_found} PDF files\nand created {number_rows} rows.')
+        if not suppress == 1:
+            messagebox.showinfo(message=f'Found {pdfs_found} PDF files\nand created {number_rows} rows.')
         return True
 
-    def unzip_ETDs(self):
+    def unzip_ETDs(self, suppress):
         info = self.get_entries()
         zips_folder = info[0]
         datetime = strftime("%Y%b%d_%H%M%S")
@@ -313,32 +396,41 @@ class GetValues:
                         messagebox.showwarning(message=f'There was an error extracting:\n{z}\nError = {e.message}\n\nSkipping...')
                     else:
                         unzips += 1
-        messagebox.showinfo(message=f'Found {zips} zipfiles and\nunzipped {unzips} files.')
+        if not suppress == 1:
+            messagebox.showinfo(message=f'Found {zips} zipfiles and\nunzipped {unzips} files.')
         return True, unzip_fold
 
     def run_procs(self):
         successful = False
+        unsuccessful = 0
         unzip_yesno = self.extractvar.get()
         csv_yesno = self.csvvar.get()
+        copy_yesno = self.copyvar.get()
         excel_yesno = self.excelvar.get()
+        suppress_yesno = self.suppressvar.get()
         dirs = self.get_entries()
         unzip_dir = dirs[0]
         if unzip_yesno == 1:
-            successful, unzip_dir = self.unzip_ETDs()
+            successful, unzip_dir = self.unzip_ETDs(suppress_yesno)
             if successful == False:
                 messagebox.showwarning(mesage=f'Something went wrong during\nunzipping. Quitting.')
                 root.quit()
         if csv_yesno == 1:
-            successful = self.make_csv_log(unzip_dir)
+            successful = self.make_csv_log(unzip_dir, suppress_yesno)
             if successful == False:
-                messagebox.showwarning(mesage=f'Something went wrong during\nCSV logging. Quitting.')
-                root.quit()
+                messagebox.showwarning(mesage=f'Something went wrong during\nCSV logging. Moving on...')
+                unsuccessful += 1
+        if copy_yesno == 1:
+            successful = self.copy_files(unzip_dir, suppress_yesno)
+            if successful == False:
+                messagebox.showwarning(mesage=f'Something went wrong during\ncopying. Moving on...')
+                unsuccessful += 1
         if excel_yesno == 1:
-            successful = self.make_excel(unzip_dir)
+            successful = self.make_excel(unzip_dir, suppress_yesno)
             if successful == False:
                 messagebox.showwarning(message=f'Something went wrong during\nExcel generation. Quitting')
                 root.quit()
-        if successful == False:
+        if not unsuccessful == 0:
             messagebox.showwarning(message=f'One or more processes were not successful.\nQuitting')
             root.quit()
         else:
@@ -348,7 +440,7 @@ class GetValues:
 
 root = tk.Tk()
 w = 676
-h = 298
+h = 306
 ws = root.winfo_screenwidth()
 hs = root.winfo_screenheight()
 x = (ws/2) - (w/2)
