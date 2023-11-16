@@ -152,7 +152,7 @@ class GetValues:
             bad_yesno = True
         else:
             new_row = []
-            for n in range(28):
+            for n in range(29):
                 new_row.append('')
             new_row[0] = soup.DISS_title.string or "" # title
             # new_row[1] = '' # fulltext_url
@@ -181,9 +181,12 @@ class GetValues:
                 adv1_sx = ""
             adv1_name = f'{adv1_fname} {adv1_mname} {adv1_sname} {adv1_sx}'
             new_row[11] = adv1_name.strip() # advisor1
-            cmte_members = ['', '', '', '', '']
+            cmte_members = ['', '', '', '', '', '']
             index = 0
             for tag in soup.find_all('DISS_cmte_member'):
+                # Break if there are more than 6 committee members
+                if index >= 6:
+                    break
                 cmte_fname = tag.DISS_fname.string or ""
                 cmte_mname = tag.DISS_middle.string or ""
                 cmte_sname = tag.DISS_surname.string or ""
@@ -203,21 +206,22 @@ class GetValues:
             new_row[14] = cmte_members[2] # advisor4
             new_row[15] = cmte_members[3] # advisor5
             new_row[16] = cmte_members[4] # advisor6
-            # new_row[17] = '' # disciplines
-            # new_row[18] = '' # comments
-            new_row[19] = soup.DISS_processing_code.string or "" # document_type
-            # new_row[20] = '' # doi
+            new_row[17] = cmte_members[5] # advisor7
+            # new_row[18] = '' # disciplines
+            # new_row[19] = '' # comments
+            new_row[20] = soup.DISS_processing_code.string or "" # document_type
+            # new_row[21] = '' # doi
             try:
-                new_row[21] = soup.DISS_sales_restriction.get('remove') # embargo_date
+                new_row[22] = soup.DISS_sales_restriction.get('remove') # embargo_date
             except AttributeError:
-                new_row[21] = '' # embargo_date
-            # new_row[22] = '' # isbn
-            new_row[23] = soup.DISS_comp_date.string or "" # publication_date
-            # new_row[24] = '' # season
-            # new_row[25] = '' # pubmedid
-            new_row[26] = f'{soup.DISS_degree.string.replace(".", "").strip()} '\
+                new_row[22] = '' # embargo_date
+            # new_row[23] = '' # isbn
+            new_row[24] = soup.DISS_comp_date.string or "" # publication_date
+            # new_row[25] = '' # season
+            # new_row[26] = '' # pubmedid
+            new_row[27] = f'{soup.DISS_degree.string.replace(".", "").strip()} '\
                                     + f'+ {soup.DISS_inst_contact.string}' # degree + dept.
-            # new_row[27] = '' # uuid
+            # new_row[28] = '' # uuid
             xml_file.close()
         return new_row, bad_yesno
 
@@ -244,9 +248,9 @@ class GetValues:
         header_row = ['title', 'fulltext_url', 'filename', 'keywords', 'abstract',
                 'author1_fname', 'author1_mname', 'author1_lname', 'author1_suffix',
                 'author1_email', 'author1_institution', 'advisor1', 'advisor2',
-                'advisor3', 'advisor4', 'advisor5', 'advisor6', 'disciplines',
-                'comments', 'document_type', 'doi', 'embargo_date', 'isbn',
-                'publication_date', 'season', 'pubmedid', 'subject_area', 'uuid']
+                'advisor3', 'advisor4', 'advisor5', 'advisor6', 'advisor7',
+                'disciplines', 'comments', 'document_type', 'doi', 'embargo_date',
+                'isbn', 'publication_date', 'season', 'pubmedid', 'subject_area', 'uuid']
         all_rows.append(header_row)
         skipped = 0
         for mdata_path in xml_paths:
