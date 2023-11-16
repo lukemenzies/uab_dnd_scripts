@@ -377,7 +377,7 @@ class GetValues:
         info = self.get_entries()
         zips_folder = info[0]
         datetime = strftime("%Y%b%d_%H%M%S")
-        unzip_folder = path.join(path.dirname(zips_folder), f'ETDs_unzipped{datetime}')
+        unzip_folder = path.join(path.dirname(zips_folder), f'{path.basename(zips_folder)}_unzipped{datetime}')
         try:
             mkdir(unzip_folder)
         except FileExistsError:
