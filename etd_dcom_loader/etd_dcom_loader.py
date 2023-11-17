@@ -160,8 +160,11 @@ class GetValues:
             new_row[3] = soup.DISS_keyword.string or "" # keywords
             # Convert parts of the abstract from DISS_para tags into a single string
             paragraph = ''
-            for ptag in soup.find_all('DISS_abstract'):
-                paragraph += f'{ptag.DISS_para.string or ""} '
+            for ptag in soup.find_all('DISS_para'):
+                part = ptag.string or ""
+                if part == ' ':
+                    part = '\n'
+                paragraph += f'{part} '
             new_row[4] = paragraph.strip() or "" # abstract
             new_row[5] = soup.DISS_author.DISS_fname.string or "" # author1_fname
             new_row[6] = soup.DISS_author.DISS_middle.string or "" # author1_mname
