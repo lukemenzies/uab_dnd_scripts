@@ -162,8 +162,6 @@ class GetValues:
             paragraph = ''
             for ptag in soup.find_all('DISS_para'):
                 part = ptag.string or ""
-                if part == ' ':
-                    part = '\n'
                 paragraph += f'{part} '
             new_row[4] = paragraph.strip() or "" # abstract
             new_row[5] = soup.DISS_author.DISS_fname.string or "" # author1_fname
