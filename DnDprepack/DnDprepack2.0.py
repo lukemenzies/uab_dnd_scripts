@@ -12,6 +12,7 @@ import csv, time
 import tkinter as tk
 from os import getcwd, getenv, listdir, mkdir, path, remove
 from platform import system
+from re import compile, match
 from shutil import copyfile, rmtree
 from tkinter import *
 from tkinter import messagebox
@@ -194,6 +195,15 @@ class GetValues:
                     messagebox.showwarning(message=f'The filename {files} does not \nend in \'a\' or \'b\'.\nSkipping it...')
         return True
 
+    def check_ids(self, checkdir):
+        for folder_id in listdir(checkdir):
+            id_path = path.join(checkdir, folder_id)
+            if path.isdir(id_path):
+                pattern = r"^[A-Z][A-Z][A-Z][A-Z]_[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9]"
+                if not match(pattern, folder_id):
+                    return False
+        return True
+
     def make_csv(self):
         csv_info = self.get_entries()
         proc_dir = csv_info[1]
@@ -213,6 +223,11 @@ class GetValues:
                 messagebox.showwarning(message=f'There was an error creating the \'csv_loaders\' folder.')
                 root.quit()
         datetime = time.strftime("%Y%b%d_%H%M%S")
+        good_ids = False
+        good_ids = self.check_ids(obj_dir)
+        if good_ids == False:
+            messagebox.showwarning(message=f'One or more folders in target directory\nhave incorrect UUIDs. Quitting.')
+            root.quit()
         if USER_OS == 'Windows':
             try:
                 newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', newline='', encoding='UTF-8')
