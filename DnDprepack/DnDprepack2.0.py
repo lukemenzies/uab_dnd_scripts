@@ -60,7 +60,7 @@ class GetValues:
         browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
         #
         owner = StringVar(frame001)
-        labl003 = Label(frame001, text='Owned By:')
+        labl003 = Label(frame001, text='Responsible\nOrg:')
         labl003.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl003.grid(column=0, row=4, pady=5, padx=5, sticky=E)
         self.en003 = Entry(frame001, width=45, textvariable=owner)
@@ -141,7 +141,7 @@ class GetValues:
         entries = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown']
         entries[0] = self.en001.get() # Path to the 'Output' folder
         entries[1] = self.en002.get() # Path to the 'Processing' folder
-        entries[2] = self.en003.get() # Owned By
+        entries[2] = self.en003.get() # Responsible Org. (formerly "Owned by")
         entries[3] = self.en004.get() # Collection Name
         entries[4] = self.en005.get() # Item Type
         entries[5] = self.en006.get() # Packaged By
@@ -240,7 +240,7 @@ class GetValues:
             except:
                 messagebox.showwarning(message='There was an error creating the CSV loader file.')
                 root.quit()
-        colnames = ['System UUID', 'Local ID', 'Owned By', 'Collection', 'Item Type', 'Packaged By']
+        colnames = ['System UUID', 'Local ID', 'Responsible Org', 'Collection', 'Item Type', 'Packaged By']
         writer = csv.writer(newCSV)
         writer.writerow(colnames)
         flist = listdir(obj_dir)

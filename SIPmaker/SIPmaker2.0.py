@@ -11,7 +11,7 @@ University of Alabama at Birmingham
 Birmingham, AL 35294
 
 Initial script created 2022-03-30 by L. I. Menzies
-This Version Last Updated 2023-06-12 by L. I. Menzies
+This Version Last Updated 2023-12-01 by L. I. Menzies
 ====================================================================
 For more information, see the UABL DnD collaboration wiki:
 https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
@@ -307,9 +307,9 @@ class ObjFormatter:
         with open(csvIn, 'r', encoding='UTF-8') as incsv:
             reader = csv.DictReader(incsv)
             headers = reader.fieldnames
-            verifyHeadrs = ['System UUID', 'Local ID', 'Owned By', 'Collection', 'Item Type', 'Packaged By']
+            verifyHeadrs = ['System UUID', 'Local ID', 'Responsible Org', 'Collection', 'Item Type', 'Packaged By']
             if not headers == verifyHeadrs:
-                messagebox.showwarning(message="Your input CSV is not formatted correctly.\n\nQuitting action.")
+                messagebox.showwarning(message="Your input CSV contains headers\nthat differ from what is expected.\n\nQuitting action.")
                 return [0, 0]
             for row in reader:
                 skip1 = False
