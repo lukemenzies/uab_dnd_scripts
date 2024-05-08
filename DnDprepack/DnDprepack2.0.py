@@ -160,7 +160,7 @@ class GetValues:
                 messagebox.showwarning(message=f'There was an error creating the \'ready_to_package\' folder.')
                 root.quit()
         for files in listdir(in_dir):
-            accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jp2']
+            accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jp2', '.wav', '.mp4', '.mkv']
             # script only accepts file formats of the proper type that do not begin with '.'
             if path.splitext(files)[1] in accepted_files and not files.startswith('.'):
                 oldfilepath = path.join(in_dir, files)
