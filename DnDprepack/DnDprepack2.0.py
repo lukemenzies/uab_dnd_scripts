@@ -8,7 +8,7 @@ Created by L. I. Menzies 2022-04-13
 Last modified by L. I. Menzies 2023-06-13
 """
 
-import csv, time
+import csv, time, sys
 import tkinter as tk
 from os import getcwd, getenv, listdir, mkdir, path, remove
 from platform import system
@@ -148,6 +148,9 @@ class GetValues:
         return entries
 
     def collate_files(self):
+        ignored_files = 0
+        total_files = 0
+        included_files = 0
         info = self.get_entries()
         in_dir = info[0]
         p_dir = info[1]
@@ -158,11 +161,18 @@ class GetValues:
                 mkdir(objects)
             except:
                 messagebox.showwarning(message=f'There was an error creating the \'ready_to_package\' folder.')
-                root.quit()
+                return False
         for files in listdir(in_dir):
-            accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jp2', '.wav', '.mp4', '.mkv']
+            # ignore directories/ folders
+            if not path.splitext(files)[1] == '':
+                total_files += 1
+            accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jp2', '.wav', '.mp4', '.mkv', '.mp3', '.csv']
             # script only accepts file formats of the proper type that do not begin with '.'
+            if path.splitext(files)[1] not in accepted_files or files.startswith('.'):
+                if not path.splitext(files)[1] == '':
+                    ignored_files += 1
             if path.splitext(files)[1] in accepted_files and not files.startswith('.'):
+                included_files += 1
                 oldfilepath = path.join(in_dir, files)
                 itemname = files[0:-10]
                 itemfolder = path.join(objects, itemname)
@@ -178,7 +188,7 @@ class GetValues:
                         else:
                             quitting = messagebox.askyesno(message=f'Do you want to quit?')
                             if quitting == True:
-                                root.quit()
+                                return False
                 if files[-5] == 'a':
                     newfilepath = path.join(itemfolder, files)
                     try:
@@ -193,6 +203,7 @@ class GetValues:
                         messagebox.showwarning(message=f'There was an error copying:\n{files}')
                 else:
                     messagebox.showwarning(message=f'The filename {files} does not \nend in \'a\' or \'b\'.\nSkipping it...')
+        messagebox.showinfo(message=f'Found {total_files} total files.\nCollated {included_files} files.\nIgnored {ignored_files} files.')
         return True
 
     def check_ids(self, checkdir):
@@ -214,32 +225,32 @@ class GetValues:
         obj_dir = path.join(proc_dir, 'ready_to_package')
         if not path.isdir(obj_dir):
             messagebox.showwarning(message=f'Could not find the \"ready_to_package\" folder.\nQuitting.')
-            root.quit()
+            return False
         out_dir = path.join(proc_dir, 'csv_loaders')
         if not path.isdir(out_dir):
             try:
                 mkdir(out_dir)
             except:
                 messagebox.showwarning(message=f'There was an error creating the \'csv_loaders\' folder.')
-                root.quit()
+                return False
         datetime = time.strftime("%Y%b%d_%H%M%S")
         good_ids = False
         good_ids = self.check_ids(obj_dir)
         if good_ids == False:
             messagebox.showwarning(message=f'One or more folders in target directory\nhave incorrect UUIDs. Quitting.')
-            root.quit()
+            return False
         if USER_OS == 'Windows':
             try:
                 newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', newline='', encoding='UTF-8')
             except:
                 messagebox.showwarning(message='There was an error creating the CSV loader file.')
-                root.quit()
+                return False
         else:
             try:
                 newCSV = open(path.join(out_dir, f'csv_loader{datetime}.csv'), 'w', encoding='UTF-8')
             except:
                 messagebox.showwarning(message='There was an error creating the CSV loader file.')
-                root.quit()
+                return False
         colnames = ['System UUID', 'Local ID', 'Responsible Org', 'Collection', 'Item Type', 'Packaged By']
         writer = csv.writer(newCSV)
         writer.writerow(colnames)
@@ -269,16 +280,16 @@ class GetValues:
         if collate_yesno == 1:
             successful = self.collate_files()
             if successful == False:
-                messagebox.showwarning(mesage=f'Something went wrong during\ncollation. Quitting.')
-                root.quit()
+                messagebox.showwarning(message=f'Something went wrong during\ncollation. Quitting.')
+                sys.exit()
         if csv_yesno == 1:
             successful = self.make_csv()
-        if successful == False:
-            messagebox.showwarning(message=f'Something went wrong during\nCSV Generation. Quitting')
-            root.quit()
+            if successful == False:
+                messagebox.showwarning(message=f'Something went wrong during\nCSV Generation. Quitting.')
+                sys.exit()
         else:
             messagebox.showinfo(message=f'Done!')
-            root.quit()
+            sys.exit()
 
 root = tk.Tk()
 w = 646
