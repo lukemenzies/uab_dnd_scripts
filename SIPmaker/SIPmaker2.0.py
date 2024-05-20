@@ -266,6 +266,12 @@ class ObjFormatter:
         obj_list = [f for f in listdir(packdir) if len(f.split('.')) == 1]
         for item in obj_list:
             oldpath = path.join(packdir, item)
+            bagpath = path.join(oldpath, 'data')
+            if path.exists(bagpath):
+                stopall = messagebox.askyesno(
+                            message=f'It looks like {item} is a bag. Quit SIPmaker?')
+                if stopall == True:
+                    sys.exit()
             newpath = path.join(oldpath, item)
             if not path.exists(newpath):
                 numitems += 1
