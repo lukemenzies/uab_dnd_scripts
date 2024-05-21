@@ -166,7 +166,7 @@ class GetValues:
             # ignore directories/ folders
             if not path.splitext(files)[1] == '':
                 total_files += 1
-            accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jp2', '.wav', '.mp4', '.mkv', '.mp3', '.csv']
+            accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jpg', '.iso', '.jp2', '.wav', '.mp4', '.mkv', '.mp3', '.csv']
             # script only accepts file formats of the proper type that do not begin with '.'
             if path.splitext(files)[1] not in accepted_files or files.startswith('.'):
                 if not path.splitext(files)[1] == '':
