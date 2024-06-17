@@ -5,7 +5,7 @@ level Item folders. Generates a CSV that can be edited. Output of this
 script can be fed into SIPmaker.
 
 Created by L. I. Menzies 2022-04-13
-Last modified by L. I. Menzies 2023-06-13
+Last modified by L. I. Menzies 2024-06-17
 """
 
 import csv, time, sys
@@ -13,7 +13,7 @@ import tkinter as tk
 from os import getcwd, getenv, listdir, mkdir, path, remove
 from platform import system
 from re import compile, match
-from shutil import copyfile, rmtree
+from shutil import copy2, rmtree
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, askdirectory
@@ -192,13 +192,13 @@ class GetValues:
                 if files[-5] == 'a':
                     newfilepath = path.join(itemfolder, files)
                     try:
-                        copyfile(oldfilepath, newfilepath)
+                        copy2(oldfilepath, newfilepath)
                     except:
                         messagebox.showwarning(message=f'There was an error copying:\n{files}')
                 elif files[-5] == 'b':
                     newfilepath = path.join(itemfolder, files)
                     try:
-                        copyfile(oldfilepath, newfilepath)
+                        copy2(oldfilepath, newfilepath)
                     except:
                         messagebox.showwarning(message=f'There was an error copying:\n{files}')
                 else:
