@@ -11,7 +11,7 @@ University of Alabama at Birmingham
 Birmingham, AL 35294
 
 Initial script created 2022-03-30 by L. I. Menzies
-This Version Last Updated 2023-12-01 by L. I. Menzies
+This Version Last Updated 2024-06-17 by L. I. Menzies
 ====================================================================
 For more information, see the UABL DnD collaboration wiki:
 https://uab-libraries.atlassian.net/wiki/spaces/DIGITIZATI/pages/349634561/SIP+Maker
@@ -441,13 +441,13 @@ class ObjFormatter:
                 skipit = True
             elif path.isdir(objpath):
                 if path.exists(path.join(objpath, 'data')):
-                    isabag = messagebox.askyesno(message="It appears that \'%s\' is a bag.\nSkip this object?" % obj)
+                    isabag = messagebox.askyesno(message=f'It appears that \'{obj}\' is a bag.\nSkip this object?')
                     if isabag == True:
                         skipit = True
                 if path.exists(path.join(objpath, 'manifest.csv')):
                     skipit = True
                     messagebox.showwarning(
-                        message="The file \'manifest.csv\' already exists.\nSkipping inventory of the object: \n\'%s\'" % obj)
+                        message=f"The file \'manifest.csv\' already exists.\nSkipping inventory of the object: \n\{obj}")
             if skipit == False:
                 manifiles += 1
                 temp_path = path.join(objpath, 'temp_manifest.csv')
@@ -472,14 +472,14 @@ class ObjFormatter:
                             counter += 1
                             rownum = str(counter)
                             statinfo = stat(filepathname)
-                            filesize = statinfo[6]
-                            csize = self.convert_size(filesize)
-                            filemime = str(mimetypes.guess_type(filepathname)[0])
                             filectime = time.strftime("%Y.%m.%d %H:%M:%S", time.localtime(statinfo.st_ctime))
                             # note: on a Windows system, ctime is "date created" but on Unix it is
                             # "change time", i.e. the last time the metadata was changed.
                             modifdate = time.strftime("%Y.%m.%d %H:%M:%S", time.localtime(statinfo.st_mtime))
                             accessdate = time.strftime("%Y.%m.%d %H:%M:%S", time.localtime(statinfo.st_atime))
+                            filesize = statinfo[6]
+                            csize = self.convert_size(filesize)
+                            filemime = str(mimetypes.guess_type(filepathname)[0])
                             md5sum = self.md5hash(filepathname)
                             sha256sum = self.sha256hash(filepathname)
                             runtime = time.strftime("%Y.%m.%d %H:%M:%S")
@@ -625,6 +625,7 @@ class ObjFormatter:
         for i in listdir(tarfolder):
             infile = path.join(tarfolder, i)
             if path.isdir(infile):
+                # outfile = path.join(outfolder, f'{path.splitext(i)[0]}.tar.gz')
                 outfile = path.join(outfolder, f'{path.splitext(i)[0]}.tar')
                 if path.exists(outfile):
                     messagebox.showwarning(
@@ -634,7 +635,7 @@ class ObjFormatter:
                     # with tarfile.open(outfile, 'w:gz') as newtar:
                     with tarfile.open(outfile, 'w') as newtar:
                         tarname = path.relpath(infile, tarfolder)
-                        newtar.add(infile, arcname='%s' % tarname)
+                        newtar.add(infile, arcname=tarname)
                     tarfiles += 1
             else:
                 notfolder += 1
