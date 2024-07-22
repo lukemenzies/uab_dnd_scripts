@@ -158,7 +158,7 @@ class GetValues:
                 pattern = r"^[A-Z][A-Z][A-Z][A-Z]_[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][a|b]"
                 test = path.splitext(filename)[0]
                 if not len(test) == 20 or not match(pattern, test):
-                    messagebox.showwarning(message=f'The filename {filename} is improperly\nformed. Quitting.')
+                    messagebox.showwarning(message=f'The file name {filename} is improperly\nformed. Quitting.')
                     return False
         return True
 
