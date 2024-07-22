@@ -153,8 +153,8 @@ class GetValues:
         and returns False.
         """
         for filename in listdir(chk_folder):
-            # Checks file names, ignores folder names
-            if not path.splitext(filename)[1] == '':
+            # Checks file names, ignores folder names and hidden files
+            if not path.splitext(filename)[1] == '' and not filename.startswith('.'):
                 pattern = r"^[A-Z][A-Z][A-Z][A-Z]_[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][a|b]"
                 test = path.splitext(filename)[0]
                 if not len(test) == 20 or not match(pattern, test):
