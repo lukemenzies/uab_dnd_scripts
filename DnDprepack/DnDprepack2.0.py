@@ -147,12 +147,31 @@ class GetValues:
         entries[5] = self.en006.get() # Packaged By
         return entries
 
+    def check_filenames(self, chk_folder):
+        """Checks to see if file names are properly formed. If it finds a
+        malformed file name it notifies the User which filename caused the error
+        and returns False.
+        """
+        for filename in listdir(chk_folder):
+            # Checks file names, ignores folder names
+            if not path.splitext(filename)[1] == '':
+                pattern = r"^[A-Z][A-Z][A-Z][A-Z]_[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][a|b]"
+                test = path.splitext(filename)[0]
+                if not len(test) == 20 or not match(pattern, test):
+                    messagebox.showwarning(message=f'The filename {filename} is improperly\nformed. Quitting.')
+                    return False
+        return True
+
     def collate_files(self):
-        ignored_files = 0
+        ignored_files = []
         total_files = 0
         included_files = 0
         info = self.get_entries()
         in_dir = info[0]
+        good_filenames = False
+        good_filenames = self.check_filenames(in_dir)
+        if good_filenames == False:
+            return False
         p_dir = info[1]
         obj_list = []
         objects = path.join(p_dir, 'ready_to_package')
@@ -169,8 +188,8 @@ class GetValues:
             accepted_files = ['.tif', '.pdf', '.xml', '.txt', '.jpg', '.iso', '.jp2', '.wav', '.mp4', '.mkv', '.mp3', '.csv']
             # script only accepts file formats of the proper type that do not begin with '.'
             if path.splitext(files)[1] not in accepted_files or files.startswith('.'):
-                if not path.splitext(files)[1] == '':
-                    ignored_files += 1
+                if not path.splitext(files)[1] == '' and not files.startswith('.'):
+                    ignored_files.append(files)
             if path.splitext(files)[1] in accepted_files and not files.startswith('.'):
                 included_files += 1
                 oldfilepath = path.join(in_dir, files)
@@ -203,7 +222,7 @@ class GetValues:
                         messagebox.showwarning(message=f'There was an error copying:\n{files}')
                 else:
                     messagebox.showwarning(message=f'The filename {files} does not \nend in \'a\' or \'b\'.\nSkipping it...')
-        messagebox.showinfo(message=f'Found {total_files} total files.\nCollated {included_files} files.\nIgnored {ignored_files} files.')
+        messagebox.showinfo(message=f'Found {total_files} total files.\nCollated {included_files} files.\nIgnored the following:\n{ignored_files}')
         return True
 
     def check_ids(self, checkdir):
