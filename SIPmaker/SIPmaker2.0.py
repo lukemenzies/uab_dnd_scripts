@@ -450,7 +450,7 @@ class ObjFormatter:
                 if path.exists(path.join(objpath, 'manifest.csv')):
                     skipit = True
                     messagebox.showwarning(
-                        message=f"The file \'manifest.csv\' already exists.\nSkipping inventory of the object: \n\{obj}")
+                        message=f"The file \'manifest.csv\' already exists.\nSkipping inventory of the object: \n{obj}")
             if skipit == False:
                 manifiles += 1
                 temp_path = path.join(objpath, 'temp_manifest.csv')
