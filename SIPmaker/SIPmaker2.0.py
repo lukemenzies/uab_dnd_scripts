@@ -263,8 +263,9 @@ class ObjFormatter:
         object contents into a subdirectory named with the local object ID
         """
         numitems = 0
-        obj_list = [f for f in listdir(packdir) if len(f.split('.')) == 1]
-        for item in obj_list:
+        # put all directories into a list and sort the list
+        sorted_objectlist = sorted([f for f in listdir(packdir) if len(f.split('.')) == 1])
+        for item in sorted_objectlist:
             oldpath = path.join(packdir, item)
             bagpath = path.join(oldpath, 'data')
             if path.exists(bagpath):
@@ -432,7 +433,9 @@ class ObjFormatter:
         Runs an inventory and generates 'manifest.csv' files for each object
         """
         manifiles = 0
-        for obj in listdir(objectsdir):
+        # sort the list of files and folders, so it iterates through in order
+        sorted_objectsdir = sorted(listdir(objectsdir))
+        for obj in sorted_objectsdir:
             objpath = path.join(objectsdir, obj)
             walkpath = path.join(objpath, obj)
             skipit = False
@@ -521,10 +524,10 @@ class ObjFormatter:
                 runnext3 = True
             else:
                 runnext3 = messagebox.askyesno(
-                    message="Created %d \'manifest.csv\' files.\n\nProceed with the next action?" % manifiles)
+                    message=f"Created {manifiles} \'manifest.csv\' files.\n\nProceed with the next action?")
         else:
             runnext3 = False
-            messagebox.showwarning(message="Created %d \'manifest.csv\' files." % manifiles)
+            messagebox.showwarning(message=f"Created {manifiles} \'manifest.csv\' files.")
         return runnext3
 
     def make_valid_apt_bag(self, bpath, storage):
@@ -584,7 +587,8 @@ class ObjFormatter:
             'Internal-Sender-Identifier': '',
             'Source-Organization': 'University of Alabama at Birmingham'
             }
-        for f in listdir(bagsdir):
+        sorted_bagsdir = sorted(listdir(bagsdir))
+        for f in sorted_bagsdir:
             inpath = path.join(bagsdir, f)
             cont = True
             valid_APT_bag = False
@@ -607,11 +611,10 @@ class ObjFormatter:
                 runnext4 = True
             else:
                 runnext4 = messagebox.askyesno(
-                    message="Created %d total bags,\nof which %d are valid.\n\nProceed with the next action?" % (
-                        totalbags, validbags))
+                    message=f"Created {totalbags} total bags,\nof which {validbags} are valid.\n\nProceed with the next action?")
         else:
             runnext4 = False
-            messagebox.showwarning(message="Created %d total bags,\nof which %d are valid." % (totalbags, validbags))
+            messagebox.showwarning(message=f"Created {totalbags} total bags,\nof which {validbags} are valid.")
         return runnext4
 
     def run_tar(self, tarfolder, procfolder, moreopts5):
@@ -622,7 +625,8 @@ class ObjFormatter:
         outfolder = path.join(procfolder, 'ready_to_transfer')
         if not path.exists(outfolder):
             mkdir(outfolder)
-        for i in listdir(tarfolder):
+        sorted_tarfolder = sorted(listdir(tarfolder))
+        for i in sorted_tarfolder:
             infile = path.join(tarfolder, i)
             if path.isdir(infile):
                 # outfile = path.join(outfolder, f'{path.splitext(i)[0]}.tar.gz')
