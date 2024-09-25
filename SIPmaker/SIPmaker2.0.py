@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ====================================================================
-SIP Maker - version 1.0.0
+SIP Maker - version 2.0.0
 Submission Information Package (SIP) builder
 Designed and written by L. I. Menzies
 Head of Digitization and Digital Preservation (DnD)
