@@ -3,7 +3,7 @@
 """
 This is a script to inventory a folder of photos captured from DVD or CD-ROM.
 Created: 2024-08-21
-Last modified: 2024-08-21 by L. I. Menzies
+Last modified: 2024-09-26 by L. I. Menzies
 """
 
 import csv
@@ -12,10 +12,12 @@ import io
 import math
 import mimetypes
 import operator
-from os import remove, stat, walk
+from os import getenv, remove, stat, walk
 from os.path import join, basename, dirname, relpath, isdir
 from platform import system
+from sys import exit
 from time import strftime, localtime
+import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, askdirectory
@@ -62,7 +64,7 @@ class GetValues:
         browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
         #
         owner = StringVar(frame001)
-        labl003 = Label(frame001, text='Disk\nLabel:')
+        labl003 = Label(frame001, text='Accession\nNumber:')
         labl003.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl003.grid(column=0, row=4, pady=5, padx=5, sticky=E)
         self.en003 = Entry(frame001, width=45, textvariable=owner)
@@ -70,7 +72,7 @@ class GetValues:
         self.en003.grid(column=1, row=4, pady=5, padx=0, sticky=W)
         #
         collname = StringVar(frame001)
-        labl004 = Label(frame001, text='Archives\nName:')
+        labl004 = Label(frame001, text='Disk\nNumber:')
         labl004.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl004.grid(column=0, row=5, pady=5, padx=5, sticky=E)
         self.en004 = Entry(frame001, width=45, textvariable=collname)
@@ -78,7 +80,7 @@ class GetValues:
         self.en004.grid(column=1, row=5, pady=5, padx=0, sticky=W)
         #
         item_type = StringVar(frame001)
-        labl005 = Label(frame001, text='Disk\nNumber:')
+        labl005 = Label(frame001, text='Disk\nLabel:')
         labl005.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl005.grid(column=0, row=6, pady=5, padx=5, sticky=E)
         self.en005 = Entry(frame001, width=45, textvariable=item_type)
@@ -95,20 +97,6 @@ class GetValues:
         #
         frame001.configure(bg=uabgreen, highlightbackground='black', bd=5, relief=RAISED)
         frame001.grid(column=0, row=0, pady=0, padx=0, sticky=NSEW)
-        #
-        self.frame002 = Frame(root)
-        self.collatevar = IntVar(self.frame002)
-        collate_chk = Checkbutton(self.frame002, text='Collate Objects', variable=self.collatevar, fg='black',
-                                bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        collate_chk.grid(column=2, row=0, pady=5, padx=5)
-        self.collatevar.set(1)
-        self.csvvar = IntVar(self.frame002)
-        csv_chk = Checkbutton(self.frame002, text='Generate\nCSV Loader', variable=self.csvvar, fg='black',
-                                bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        csv_chk.grid(column=3, row=0, pady=5, padx=5)
-        self.csvvar.set(1)
-        self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
-        self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
         #
         frame003 = Frame(root)
         cancel = Button(frame003, text='Quit', command=root.quit)
@@ -143,9 +131,9 @@ class GetValues:
         entries = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown']
         entries[0] = self.en001.get() # Path to the Input Folder
         entries[1] = self.en002.get() # Path to the Output Folder
-        entries[2] = self.en003.get() # Disk Label
-        entries[3] = self.en004.get() # Archives Name
-        entries[4] = self.en005.get() # Disk Number
+        entries[2] = self.en003.get() # Accession Number
+        entries[3] = self.en004.get() # Disk Number
+        entries[4] = self.en005.get() # Disk Label
         entries[5] = self.en006.get() # BlazerID
         return entries
 
@@ -171,7 +159,7 @@ class GetValues:
             return "OS Error"
         return hash_sha3.hexdigest()
 
-    def convert_size(size):
+    def convert_size(self, size):
         """ Make file sizes human readable. """
         if (size == 0):
             return '0B'
@@ -184,16 +172,22 @@ class GetValues:
         s = round(size / p, 2)
         return '%s%s' % (s, size_name[i])
 
-    def run_inventory(indir, outdir):
+    def run_inventory(self):
         """ Run the inventory and output as csv. """
         filecounter = 0
         dsstore_count = 0
+        entries = self.get_entries()
+        indir = entries[0].strip().replace(" ", "")
+        outdir = entries[1].strip().replace(" ", "")
+        accno = entries[2].strip().replace(" ", "")
+        diskno = entries[3].strip().replace(" ", "")
+        disklabel = entries[4].strip().replace(" ", "")
+        runby = entries[5].strip().replace(" ", "")
         inv_path = join(outdir, f'Inventory{strftime("%Y%b%d_%H%M%S")}temp.csv')
         inventory = open(inv_path, 'w')
-        colnames = ['No.', 'Filename', 'RelPath', 'Filesize', 'Filetype', 'C-Time',
-                    'Modified', 'Accessed', 'MD5', 'MD5-Time', 'SHA3_256',
-                    'SHA3-Time','=>', 'mode', 'inode', 'device',
-                    'enlink', 'user', 'group']
+        colnames = ['No.', 'Accession Number', 'Disk Number', 'Disk Label', 'File Name',
+                    'Path', 'Size', 'Format', 'Created', 'Modified', 'Accessed',
+                    'Date Run', 'Run By']
         writeCSV = csv.writer(inventory)
         writeCSV.writerow(colnames)
         for base, dirs, files in walk(indir):
@@ -205,10 +199,9 @@ class GetValues:
                     dsstore_count += 1
                 elif not basename(filepathname) == '.DS_Store':
                     filecounter += 1
-                    rownum = str(filecounter)
                     statinfo = stat(filepathname)
                     filesize = statinfo[6]
-                    csize = convert_size(filesize)
+                    csize = self.convert_size(filesize)
                     filemime = str(mimetypes.guess_type(filepathname)[0])
                     filectime = strftime("%Y.%m.%d %H:%M:%S",
                                          localtime(statinfo.st_ctime))
@@ -218,35 +211,28 @@ class GetValues:
                                          localtime(statinfo.st_mtime))
                     accessdate = strftime("%Y.%m.%d %H:%M:%S",
                                           localtime(statinfo.st_atime))
-                    md5sum = md5hash(filepathname)
-                    md5time = strftime("%Y.%m.%d %H:%M:%S")
-                    sha3sum = sha3hash(filepathname)
-                    sha3time = strftime("%Y.%m.%d %H:%M:%S")
-                    filemode = str(statinfo.st_mode)
-                    fileino = str(statinfo.st_ino)
-                    filedevice = str(statinfo.st_dev)
-                    filenlink = str(statinfo.st_nlink)
-                    fileuser = str(statinfo.st_uid)
-                    filegroup = str(statinfo.st_gid)
                     showpath = relpath(filepathname, dirname(indir))
-                    newrow = [rownum, name, showpath, csize, filemime, filectime,
-                                modifdate, accessdate, md5sum, md5time, sha3sum,
-                                sha3time, ' ', filemode, fileino, filedevice,
-                                filenlink, fileuser, filegroup]
+                    runtime = strftime("%Y.%m.%d %H:%M:%S")
+                    newrow = [filecounter, accno, diskno, disklabel, name, showpath, csize,
+                                filemime, filectime, modifdate, accessdate,
+                                runtime, runby]
                     writeCSV.writerow(newrow)
                     print(f'\rProgress: {filecounter} Files', end='')
         inventory.close()
         if dsstore_count > 0:
             print(f'\nSkipped {dsstore_count} \'.DS_Store\' files.\n')
-        return inv_path
+        return [inv_path, accno, diskno]
 
-    def sort_inventory(self, unsorted_file, in_dir):
+    def sort_inventory(self, ivalues):
         # print(f'Sorting Data... ')
-        output_path = join(dirname(unsorted_file), f'Inventory_{basename(in_dir)}_{strftime("%Y%b%d_%H%M%S")}.csv')
+        unsorted_file = ivalues[0]
+        inventory_name = f'{ivalues[1]}_{ivalues[2]}'
+        outfile = f'Inventory_{inventory_name}_{strftime("%Y%b%d_%H%M%S")}.csv'
+        output_path = join(dirname(unsorted_file), outfile)
         with open(unsorted_file, 'r') as un_csv:
             reading = csv.DictReader(un_csv)
             headers = reading.fieldnames
-            sorted_data = sorted(reading, key=lambda row: row['RelPath'], reverse=False)
+            sorted_data = sorted(reading, key=lambda row: row['Path'], reverse=False)
         with open(output_path, 'w') as out_csv:
             writing = csv.DictWriter(out_csv, fieldnames=headers)
             writing.writeheader()
@@ -256,17 +242,18 @@ class GetValues:
                 n += 1
                 writing.writerow(rrows)
         remove(unsorted_file)
-        return output_path
+        return True
 
     def run_procs(self):
         successful = False
-        successful = self.run_inventory()
+        temp_values = self.run_inventory()
+        successful = self.sort_inventory(temp_values)
         if successful == False:
             messagebox.showwarning(message=f'Something went wrong during\nCSV Generation. Quitting.')
-            sys.exit()
+            root.quit()
         else:
             messagebox.showinfo(message=f'Done!')
-            sys.exit()
+            root.quit()
 
 root = tk.Tk()
 w = 646
@@ -276,7 +263,7 @@ hs = root.winfo_screenheight()
 x = (ws/2) - (w/2)
 y = (hs/2) - (h/2)
 root.geometry('%dx%d+%d+%d' %(w, h, x, y))
-root.title('DnD Pre-Packer')
+root.title('DVD Inventory')
 app = GetValues(root)
 root.configure(bg=blazegold, bd=4)
 root.lift()
