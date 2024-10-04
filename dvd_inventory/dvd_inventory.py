@@ -3,10 +3,9 @@
 """
 This is a script to inventory a folder of photos captured from DVD or CD-ROM.
 Created: 2024-08-21
-Last modified: 2024-09-26 by L. I. Menzies
+Last modified: 2024-10-04 by L. I. Menzies
 """
 
-import csv
 import hashlib
 import io
 import math
@@ -14,6 +13,7 @@ import mimetypes
 import operator
 from os import getenv, remove, stat, walk
 from os.path import join, basename, dirname, relpath, isdir
+from pandas import DataFrame, ExcelWriter, ExcelFile
 from platform import system
 from sys import exit
 from time import strftime, localtime
@@ -160,7 +160,7 @@ class GetValues:
         return hash_sha3.hexdigest()
 
     def convert_size(self, size):
-        """ Make file sizes human readable. """
+        """ Make file sizes human readable """
         if (size == 0):
             return '0B'
         # size_name = ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB")
@@ -173,7 +173,7 @@ class GetValues:
         return '%s%s' % (s, size_name[i])
 
     def run_inventory(self):
-        """ Run the inventory and output as csv. """
+        """ Run the inventory and output as Excel """
         filecounter = 0
         dsstore_count = 0
         entries = self.get_entries()
@@ -183,13 +183,10 @@ class GetValues:
         diskno = entries[3].strip().replace(" ", "")
         disklabel = entries[4].strip().replace(" ", "")
         runby = entries[5].strip().replace(" ", "")
-        inv_path = join(outdir, f'Inventory{strftime("%Y%b%d_%H%M%S")}temp.csv')
-        inventory = open(inv_path, 'w')
-        colnames = ['No.', 'Accession Number', 'Disk Number', 'Disk Label', 'File Name',
-                    'Path', 'Size', 'Format', 'Created', 'Modified', 'Accessed',
-                    'Date Run', 'Run By']
-        writeCSV = csv.writer(inventory)
-        writeCSV.writerow(colnames)
+        # Create a data frame from a row of rows
+        all_rows = []
+        colnames = ['Accession Number', 'Disk Number', 'Disk Label', 'File Name',
+                    'Path', 'Size', 'Format', 'Created', 'Modified', 'Date Run', 'Run By']
         for base, dirs, files in walk(indir):
             for name in files:
                 filepathname = join(base, name)
@@ -209,45 +206,25 @@ class GetValues:
                     # "change time", i.e. the last time the metadata was changed.
                     modifdate = strftime("%Y.%m.%d %H:%M:%S",
                                          localtime(statinfo.st_mtime))
-                    accessdate = strftime("%Y.%m.%d %H:%M:%S",
-                                          localtime(statinfo.st_atime))
                     showpath = relpath(filepathname, dirname(indir))
                     runtime = strftime("%Y.%m.%d %H:%M:%S")
-                    newrow = [filecounter, accno, diskno, disklabel, name, showpath, csize,
-                                filemime, filectime, modifdate, accessdate,
-                                runtime, runby]
-                    writeCSV.writerow(newrow)
-                    print(f'\rProgress: {filecounter} Files', end='')
-        inventory.close()
+                    newrow = [accno, diskno, disklabel, name, showpath, csize,
+                                filemime, filectime, modifdate, runtime, runby]
+                    all_rows.append(newrow)
+                    # print(f'\rProgress: {filecounter} Files', end='')
         if dsstore_count > 0:
             print(f'\nSkipped {dsstore_count} \'.DS_Store\' files.\n')
-        return [inv_path, accno, diskno]
-
-    def sort_inventory(self, ivalues):
-        # print(f'Sorting Data... ')
-        unsorted_file = ivalues[0]
-        inventory_name = f'{ivalues[1]}_{ivalues[2]}'
-        outfile = f'Inventory_{inventory_name}_{strftime("%Y%b%d_%H%M%S")}.csv'
-        output_path = join(dirname(unsorted_file), outfile)
-        with open(unsorted_file, 'r') as un_csv:
-            reading = csv.DictReader(un_csv)
-            headers = reading.fieldnames
-            sorted_data = sorted(reading, key=lambda row: row['Path'], reverse=False)
-        with open(output_path, 'w') as out_csv:
-            writing = csv.DictWriter(out_csv, fieldnames=headers)
-            writing.writeheader()
-            n = 1
-            for rrows in sorted_data:
-                rrows['No.'] = str(n)
-                n += 1
-                writing.writerow(rrows)
-        remove(unsorted_file)
+        data_frame = DataFrame(all_rows, columns=colnames)
+        outfile = f'Inventory_{accno}_{diskno}_{strftime("%Y%b%d_%H%M%S")}.xlsx'
+        output_path = join(outdir, outfile)
+        excel_writer = ExcelWriter(output_path)
+        data_frame.sort_values(['Path']).to_excel(excel_writer, index=False)
+        excel_writer.close()
         return True
 
     def run_procs(self):
         successful = False
-        temp_values = self.run_inventory()
-        successful = self.sort_inventory(temp_values)
+        successful = self.run_inventory()
         if successful == False:
             messagebox.showwarning(message=f'Something went wrong during\nCSV Generation. Quitting.')
             root.quit()
