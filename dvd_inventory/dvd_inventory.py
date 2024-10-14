@@ -3,7 +3,7 @@
 """
 This is a script to inventory a folder of photos captured from DVD or CD-ROM.
 Created: 2024-08-21
-Last modified: 2024-10-04 by L. I. Menzies
+Last modified: 2024-10-14 by L. I. Menzies
 """
 
 import hashlib
@@ -38,60 +38,75 @@ class GetValues:
     def __init__(self, root):
         frame001 = Frame(root)
         labl000 = Label(frame001, text='DVD Inventory')
-        labl000.configure(fg='black', bg=gray, bd=0, font=('Arial', 10), height=3, width=20, relief=SUNKEN, justify=CENTER)
+        labl000.configure(fg='black', bg=gray, bd=0, font=('Arial', 10), height=3,
+                            width=20, relief=SUNKEN, justify=CENTER)
         labl000.grid(column=1, row=0, pady=5, padx=5, sticky=NSEW)
         #
-        fol = StringVar(frame001)
+        input_folder = StringVar(frame001)
         labl001 = Label(frame001, text='Input\nFolder:')
-        labl001.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl001.configure(fg='black', bg=blazegold, highlightbackground='black',
+                            bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl001.grid(column=0, row=2, pady=5, padx=5, sticky=E)
-        self.en001 = Entry(frame001, width=45, textvariable=fol)
+        self.en001 = Entry(frame001, width=40, textvariable=input_folder)
         self.en001.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en001.grid(column=1, row=2, pady=5, padx=0, sticky=W)
         browse1 = Button(frame001, text='Browse', command=lambda: self.ask_folder(fol))
         browse1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse1.grid(column=2, row=2, pady=5, padx=5, sticky=W)
         #
-        procfol = StringVar(frame001)
+        output_folder = StringVar(frame001)
         labl002 = Label(frame001, text='Output\nFolder:')
-        labl002.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl002.configure(fg='black', bg=blazegold, highlightbackground='black',
+                            bd=4,font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl002.grid(column=0, row=3, pady=5, padx=5, sticky=E)
-        self.en002 = Entry(frame001, width=45, textvariable=procfol)
+        self.en002 = Entry(frame001, width=40, textvariable=output_folder)
         self.en002.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en002.grid(column=1, row=3, pady=5, padx=0, sticky=W)
         browse2 = Button(frame001, text='Browse', command=lambda: self.ask_folder(procfol))
         browse2.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
         #
-        owner = StringVar(frame001)
+        # Default accession number, below, is the current donation: "A2020-04"
+        # This default should be changed (in this code) when moving to
+        # a new collection/ donation/ accession number.
+        accession = StringVar(frame001)
+        accession.set('A2020-04')
         labl003 = Label(frame001, text='Accession\nNumber:')
-        labl003.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl003.configure(fg='black', bg=blazegold, highlightbackground='black',
+                            bd=4,font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl003.grid(column=0, row=4, pady=5, padx=5, sticky=E)
-        self.en003 = Entry(frame001, width=45, textvariable=owner)
+        self.en003 = Entry(frame001, width=40, textvariable=accession)
         self.en003.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en003.grid(column=1, row=4, pady=5, padx=0, sticky=W)
         #
-        collname = StringVar(frame001)
+        # Only allow numbers for the disk number Entry
+        disk_number = StringVar(frame001)
         labl004 = Label(frame001, text='Disk\nNumber:')
-        labl004.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl004.configure(fg='black', bg=blazegold, highlightbackground='black',
+                            bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl004.grid(column=0, row=5, pady=5, padx=5, sticky=E)
-        self.en004 = Entry(frame001, width=45, textvariable=collname)
+        self.en004 = Entry(frame001, width=40, textvariable=disk_number)
         self.en004.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en004.grid(column=1, row=5, pady=5, padx=0, sticky=W)
+        valid1 = Button(frame001, text='Validate', command=lambda: self.onValidate(disk_number))
+        valid1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
+        valid1.grid(column=2, row=5, pady=5, padx=5, sticky=W)
         #
-        item_type = StringVar(frame001)
+        disk_label = StringVar(frame001)
         labl005 = Label(frame001, text='Disk\nLabel:')
-        labl005.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl005.configure(fg='black', bg=blazegold, highlightbackground='black',
+                            bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl005.grid(column=0, row=6, pady=5, padx=5, sticky=E)
-        self.en005 = Entry(frame001, width=45, textvariable=item_type)
+        self.en005 = Entry(frame001, width=40, textvariable=disk_label)
         self.en005.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en005.grid(column=1, row=6, pady=5, padx=0, sticky=W)
         #
         blazerid = StringVar(frame001)
         labl006 = Label(frame001, text='Your\nBlazerID:')
-        labl006.configure(fg='black', bg=blazegold, highlightbackground='black', bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
+        labl006.configure(fg='black', bg=blazegold, highlightbackground='black',
+                            bd=4, font=('Arial', 10), height=2, width=9, justify=CENTER)
         labl006.grid(column=0, row=7, pady=5, padx=5, sticky=E)
-        self.en006 = Entry(frame001, width=45, textvariable=blazerid)
+        self.en006 = Entry(frame001, width=40, textvariable=blazerid)
         self.en006.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en006.grid(column=1, row=7, pady=5, padx=0, sticky=W)
         #
@@ -104,7 +119,7 @@ class GetValues:
         cancel.grid(column=0, row=0, pady=5, padx=5, sticky=W)
         space = Label(frame003, text='')
         space.configure(fg=uabgreen, bg=uabgreen, highlightbackground='black', bd=0, font=('Arial', 8))
-        space.grid(column=1, row=0, pady=0, padx=235, sticky=NSEW)
+        space.grid(column=1, row=0, pady=0, padx=215, sticky=NSEW)
         submit = Button(frame003, text='Submit', command=self.run_procs)
         submit.configure(fg='black', bg=gray, highlightbackground='white', font=('Arial', 11))
         submit.grid(column=2, row=0, pady=5, padx=5, sticky=E)
@@ -119,6 +134,15 @@ class GetValues:
             userHome = getenv('USERPROFILE')
         return userHome
 
+    def onValidate(self, string):
+        input = self.en004.get()
+        if str.isdigit(input) or str(input) == "":
+            string.set(input)
+            return
+        else:
+            string.set("")
+            return
+
     def ask_folder(self, foname):
         foname.set(askdirectory(initialdir=self.user_home(), title='Select the Folder'))
         return foname
@@ -132,7 +156,7 @@ class GetValues:
         entries[0] = self.en001.get() # Path to the Input Folder
         entries[1] = self.en002.get() # Path to the Output Folder
         entries[2] = self.en003.get() # Accession Number
-        entries[3] = self.en004.get() # Disk Number
+        entries[3] = f'disk{int(self.en004.get()):04d}' # Disk Number
         entries[4] = self.en005.get() # Disk Label
         entries[5] = self.en006.get() # BlazerID
         return entries
@@ -220,6 +244,7 @@ class GetValues:
         excel_writer = ExcelWriter(output_path)
         data_frame.sort_values(['Path']).to_excel(excel_writer, index=False)
         excel_writer.close()
+        messagebox.showinfo(message=f'Total Files: \n{filecounter}')
         return True
 
     def run_procs(self):
