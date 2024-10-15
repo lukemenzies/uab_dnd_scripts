@@ -3,7 +3,7 @@
 """
 This is a script to inventory a folder of photos captured from DVD or CD-ROM.
 Created: 2024-08-21
-Last modified: 2024-10-14 by L. I. Menzies
+Last modified: 2024-10-15 by L. I. Menzies
 """
 
 import hashlib
@@ -41,7 +41,7 @@ class GetValues:
         labl000.configure(fg='black', bg=gray, bd=0, font=('Arial', 10), height=3,
                             width=20, relief=SUNKEN, justify=CENTER)
         labl000.grid(column=1, row=0, pady=5, padx=5, sticky=NSEW)
-        #
+        # Input Folder
         input_folder = StringVar(frame001)
         labl001 = Label(frame001, text='Input\nFolder:')
         labl001.configure(fg='black', bg=blazegold, highlightbackground='black',
@@ -53,7 +53,7 @@ class GetValues:
         browse1 = Button(frame001, text='Browse', command=lambda: self.ask_folder(fol))
         browse1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse1.grid(column=2, row=2, pady=5, padx=5, sticky=W)
-        #
+        # Output Folder
         output_folder = StringVar(frame001)
         labl002 = Label(frame001, text='Output\nFolder:')
         labl002.configure(fg='black', bg=blazegold, highlightbackground='black',
@@ -65,9 +65,9 @@ class GetValues:
         browse2 = Button(frame001, text='Browse', command=lambda: self.ask_folder(procfol))
         browse2.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
-        #
-        # Default accession number, below, is the current donation: "A2020-04"
-        # This default should be changed (in this code) when moving to
+        # Accession Number/ Donation Number
+        # Default accession number is the current donation: "A2020-04"
+        # This default should be changed here when moving to
         # a new collection/ donation/ accession number.
         accession = StringVar(frame001)
         accession.set('A2020-04')
@@ -78,8 +78,7 @@ class GetValues:
         self.en003 = Entry(frame001, width=40, textvariable=accession)
         self.en003.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en003.grid(column=1, row=4, pady=5, padx=0, sticky=W)
-        #
-        # Only allow numbers for the disk number Entry
+        # Disk Number
         disk_number = StringVar(frame001)
         labl004 = Label(frame001, text='Disk\nNumber:')
         labl004.configure(fg='black', bg=blazegold, highlightbackground='black',
@@ -88,10 +87,11 @@ class GetValues:
         self.en004 = Entry(frame001, width=40, textvariable=disk_number)
         self.en004.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en004.grid(column=1, row=5, pady=5, padx=0, sticky=W)
-        valid1 = Button(frame001, text='Validate', command=lambda: self.onValidate(disk_number))
-        valid1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
-        valid1.grid(column=2, row=5, pady=5, padx=5, sticky=W)
-        #
+        # Validate button, only allows integers in the Entry field
+        # valid1 = Button(frame001, text='Validate', command=lambda: self.onValidate(disk_number))
+        # valid1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
+        # valid1.grid(column=2, row=5, pady=5, padx=5, sticky=W)
+        # Disk Label
         disk_label = StringVar(frame001)
         labl005 = Label(frame001, text='Disk\nLabel:')
         labl005.configure(fg='black', bg=blazegold, highlightbackground='black',
@@ -100,7 +100,7 @@ class GetValues:
         self.en005 = Entry(frame001, width=40, textvariable=disk_label)
         self.en005.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en005.grid(column=1, row=6, pady=5, padx=0, sticky=W)
-        #
+        # BlazerID
         blazerid = StringVar(frame001)
         labl006 = Label(frame001, text='Your\nBlazerID:')
         labl006.configure(fg='black', bg=blazegold, highlightbackground='black',
@@ -109,10 +109,10 @@ class GetValues:
         self.en006 = Entry(frame001, width=40, textvariable=blazerid)
         self.en006.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en006.grid(column=1, row=7, pady=5, padx=0, sticky=W)
-        #
+        # Configure Frame001
         frame001.configure(bg=uabgreen, highlightbackground='black', bd=5, relief=RAISED)
         frame001.grid(column=0, row=0, pady=0, padx=0, sticky=NSEW)
-        #
+        # Quit
         frame003 = Frame(root)
         cancel = Button(frame003, text='Quit', command=root.quit)
         cancel.configure(fg='black', bg=gray, highlightbackground='white', font=('Arial', 11))
@@ -120,7 +120,8 @@ class GetValues:
         space = Label(frame003, text='')
         space.configure(fg=uabgreen, bg=uabgreen, highlightbackground='black', bd=0, font=('Arial', 8))
         space.grid(column=1, row=0, pady=0, padx=215, sticky=NSEW)
-        submit = Button(frame003, text='Submit', command=self.run_procs)
+        # Submit
+        submit = Button(frame003, text='Submit', command=lambda: self.run_procs(disk_number))
         submit.configure(fg='black', bg=gray, highlightbackground='white', font=('Arial', 11))
         submit.grid(column=2, row=0, pady=5, padx=5, sticky=E)
         frame003.configure(bg=uabgreen, highlightbackground='black', bd=5, relief=RAISED)
@@ -138,10 +139,10 @@ class GetValues:
         input = self.en004.get()
         if str.isdigit(input) or str(input) == "":
             string.set(input)
-            return
+            return True
         else:
             string.set("")
-            return
+            return False
 
     def ask_folder(self, foname):
         foname.set(askdirectory(initialdir=self.user_home(), title='Select the Folder'))
@@ -247,7 +248,12 @@ class GetValues:
         messagebox.showinfo(message=f'Total Files: \n{filecounter}')
         return True
 
-    def run_procs(self):
+    def run_procs(self, dnumber):
+        valid = False
+        valid = self.onValidate(dnumber)
+        if valid == False:
+            messagebox.showwarning(message=f'For \"Disk Number\"\nenter only numbers')
+            return
         successful = False
         successful = self.run_inventory()
         if successful == False:
