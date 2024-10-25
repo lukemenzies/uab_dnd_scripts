@@ -50,7 +50,7 @@ class GetValues:
         self.en001 = Entry(frame001, width=40, textvariable=input_folder)
         self.en001.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en001.grid(column=1, row=2, pady=5, padx=0, sticky=W)
-        browse1 = Button(frame001, text='Browse', command=lambda: self.ask_folder(fol))
+        browse1 = Button(frame001, text='Browse', command=lambda: self.ask_folder(input_folder))
         browse1.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse1.grid(column=2, row=2, pady=5, padx=5, sticky=W)
         # Output Folder
@@ -62,7 +62,7 @@ class GetValues:
         self.en002 = Entry(frame001, width=40, textvariable=output_folder)
         self.en002.configure(bg=gray, fg='black', relief=SUNKEN, bd=2, font=('Arial', 14), justify=LEFT)
         self.en002.grid(column=1, row=3, pady=5, padx=0, sticky=W)
-        browse2 = Button(frame001, text='Browse', command=lambda: self.ask_folder(procfol))
+        browse2 = Button(frame001, text='Browse', command=lambda: self.ask_folder(output_folder))
         browse2.configure(bd=4, bg=smoke, highlightbackground='black', font=('Arial', 10))
         browse2.grid(column=2, row=3, pady=5, padx=5, sticky=W)
         # Accession Number/ Donation Number
