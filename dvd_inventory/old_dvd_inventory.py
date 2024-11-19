@@ -11,11 +11,10 @@ import io
 import math
 import mimetypes
 import operator
-from os import getenv, mkdir, remove, stat, walk
-from os.path import abspath, exists, join, basename, dirname, relpath, isdir
+from os import getenv, remove, stat, walk
+from os.path import join, basename, dirname, relpath, isdir
 from pandas import DataFrame, ExcelWriter, ExcelFile
 from platform import system
-from shutil import copy2, copytree
 from sys import exit
 from time import strftime, localtime
 import tkinter as tk
@@ -113,22 +112,6 @@ class GetValues:
         # Configure Frame001
         frame001.configure(bg=uabgreen, highlightbackground='black', bd=5, relief=RAISED)
         frame001.grid(column=0, row=0, pady=0, padx=0, sticky=NSEW)
-        # Inventory Checkbox
-        self.frame002 = Frame(root)
-        self.inventoryvar = IntVar(self.frame002)
-        collate_chk = Checkbutton(self.frame002, text='Create Inventory', variable=self.inventoryvar, fg='black',
-                                bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        collate_chk.grid(column=2, row=0, pady=5, padx=5)
-        self.inventoryvar.set(1)
-        # Copy Checkbox
-        self.copyvar = IntVar(self.frame002)
-        csv_chk = Checkbutton(self.frame002, text='Copy Files', variable=self.copyvar, fg='black',
-                                bg=smoke, relief='flat', highlightbackground=dragongreen, bd=4, font=('Arial', 10), justify='left')
-        csv_chk.grid(column=3, row=0, pady=5, padx=5)
-        self.copyvar.set(1)
-        # Configure Frame002
-        self.frame002.configure(bg=dragongreen, highlightbackground='black', bd=5, relief=SUNKEN)
-        self.frame002.grid(column=0, row=1, pady=0, padx=0, sticky=NSEW)
         # Quit
         frame003 = Frame(root)
         cancel = Button(frame003, text='Quit', command=root.quit)
@@ -166,18 +149,18 @@ class GetValues:
         return foname
 
     def ask_file(self, fname):
-        fname.set(abspath(askopenfilename(initialdir=self.user_home(), title='Select the master CSV File')))
+        fname.set(path.abspath(askopenfilename(initialdir=self.user_home(), title='Select the master CSV File')))
         return fname
 
     def get_entries(self):
-        entryvals = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown']
-        entryvals[0] = self.en001.get() # Path to the Input Folder
-        entryvals[1] = self.en002.get() # Path to the Output Folder
-        entryvals[2] = self.en003.get() # Accession Number
-        entryvals[3] = f'{int(self.en004.get()):04d}' # Disk Number
-        entryvals[4] = self.en005.get() # Disk Label
-        entryvals[5] = self.en006.get() # BlazerID
-        return entryvals
+        entries = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown']
+        entries[0] = self.en001.get() # Path to the Input Folder
+        entries[1] = self.en002.get() # Path to the Output Folder
+        entries[2] = self.en003.get() # Accession Number
+        entries[3] = f'disk{int(self.en004.get()):04d}' # Disk Number
+        entries[4] = self.en005.get() # Disk Label
+        entries[5] = self.en006.get() # BlazerID
+        return entries
 
     def md5hash(file_name):
         """ Generate SHA3-256 hashes. """
@@ -214,24 +197,17 @@ class GetValues:
         s = round(size / p, 2)
         return '%s%s' % (s, size_name[i])
 
-    def run_inventory(self, entry_values):
+    def run_inventory(self):
         """ Run the inventory and output as Excel """
         filecounter = 0
         dsstore_count = 0
-        indir = entry_values[0].strip().replace(" ", "")
-        workingdir = entry_values[1].strip().replace(" ", "")
-        accno = entry_values[2].strip().replace(" ", "")
-        diskno = entry_values[3].strip().replace(" ", "")
-        disklabel = entry_values[4].strip()
-        runby = entry_values[5].strip().replace(" ", "")
-        # Create the AccessionNo_DiskNo folder
-        outdir = join(workingdir, f'{accno}_disk{diskno}')
-        if exists(outdir):
-            contin = messagebox.askyesno(message=f'The folder for this disk\nexists! Continue?')
-            if contin == False:
-                return False
-        elif not exists(outdir):
-            mkdir(outdir)
+        entries = self.get_entries()
+        indir = entries[0].strip().replace(" ", "")
+        outdir = entries[1].strip().replace(" ", "")
+        accno = entries[2].strip().replace(" ", "")
+        diskno = entries[3].strip().replace(" ", "")
+        disklabel = entries[4].strip().replace(" ", "")
+        runby = entries[5].strip().replace(" ", "")
         # Create a data frame from a row of rows
         all_rows = []
         colnames = ['Accession Number', 'Disk Number', 'Disk Label', 'File Name',
@@ -262,8 +238,7 @@ class GetValues:
                     all_rows.append(newrow)
                     # print(f'\rProgress: {filecounter} Files', end='')
         if dsstore_count > 0:
-        #    print(f'\nSkipped {dsstore_count} \'.DS_Store\' files.\n')
-            messagebox.showinfo(message=f'Skipped {dsstore_count} \'.DS_Store\' files.')
+            print(f'\nSkipped {dsstore_count} \'.DS_Store\' files.\n')
         data_frame = DataFrame(all_rows, columns=colnames)
         outfile = f'Inventory_{accno}_{diskno}_{strftime("%Y%b%d_%H%M%S")}.xlsx'
         output_path = join(outdir, outfile)
@@ -273,47 +248,20 @@ class GetValues:
         messagebox.showinfo(message=f'Total Files: \n{filecounter}')
         return True
 
-    def copy_img_files(self, entry_values):
-        iso_dir = entry_values[0].strip().replace(" ", "")
-        working_dir = entry_values[1].strip().replace(" ", "")
-        acc_num = entry_values[2].strip().replace(" ", "")
-        disk_num = entry_values[3].strip().replace(" ", "")
-        # Check if AccessionNo_DiskNo folder exists
-        out_dir = join(working_dir, f'{acc_num}_disk{disk_num}')
-        if not exists(out_dir):
-            mkdir(out_dir)
-        # Create the Disk Copy Directory
-        destination = join(out_dir, f'Disk{disk_num}')
-        try:
-            copytree(iso_dir, destination, copy_function=copy2)
-        except FileExistsError:
-            messagebox.showwarning(message=f'{destination}\nalready exists! Fix,\nand run \"copy\" again.')
-            return False
-        return True
-
     def run_procs(self, dnumber):
         valid = False
         valid = self.onValidate(dnumber)
         if valid == False:
             messagebox.showwarning(message=f'For \"Disk Number\"\nenter only numbers')
             return
-        values = self.get_entries()
-        inventory_yesno = self.inventoryvar.get()
-        copy_yesno = self.copyvar.get()
-        if inventory_yesno == 1:
-            successful = False
-            successful = self.run_inventory(values)
-            if successful == False:
-                messagebox.showwarning(message=f'Something went wrong during\ninventory creation. Quitting.')
-                exit()
-        if copy_yesno == 1:
-            success = False
-            success = self.copy_img_files(values)
-            if success == False:
-                messagebox.showwarning(message=f'Something went wrong during\nthe copy process. Quitting.')
-                exit()
-        messagebox.showinfo(message=f'Done!')
-        exit()
+        successful = False
+        successful = self.run_inventory()
+        if successful == False:
+            messagebox.showwarning(message=f'Something went wrong during\nCSV Generation. Quitting.')
+            root.quit()
+        else:
+            messagebox.showinfo(message=f'Done!')
+            root.quit()
 
 root = tk.Tk()
 w = 646
